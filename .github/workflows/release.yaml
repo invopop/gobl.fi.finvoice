@@ -1,0 +1,50 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+
+# Allow the workflow to create tags and releases using the default GITHUB_TOKEN.
+permissions:
+  contents: write
+
+# Serialise runs so two pushes can't race to create the same tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags, needed to find the latest tag
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          latest=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$latest" ]; then
+            next="v0.0.1"
+          else
+            base=${latest#v}
+            major=${base%%.*}
+            rest=${base#*.}
+            minor=${rest%%.*}
+            patch=${rest#*.}
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+
+          echo "Latest tag: ${latest:-none}; creating release $next"
+
+          # Creates the tag at this commit and a GitHub Release whose notes are
+          # auto-generated from the PRs/commits since the previous release.
+          gh release create "$next" \
+            --target "$GITHUB_SHA" \
+            --title "$next" \
+            --generate-notes

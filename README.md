@@ -5,6 +5,14 @@ for invoices delivered over the Finnish banking network.
 
 Released under the Apache 2.0 [LICENSE](https://github.com/invopop/gobl.fi.finvoice/blob/main/LICENSE), Copyright 2026 [Invopop S.L.](https://invopop.com).
 
+[![Lint](https://github.com/invopop/gobl.fi.finvoice/actions/workflows/lint.yaml/badge.svg)](https://github.com/invopop/gobl.fi.finvoice/actions/workflows/lint.yaml)
+[![Test Go](https://github.com/invopop/gobl.fi.finvoice/actions/workflows/test.yaml/badge.svg)](https://github.com/invopop/gobl.fi.finvoice/actions/workflows/test.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/invopop/gobl.fi.finvoice)](https://goreportcard.com/report/github.com/invopop/gobl.fi.finvoice)
+[![codecov](https://codecov.io/gh/invopop/gobl.fi.finvoice/graph/badge.svg)](https://codecov.io/gh/invopop/gobl.fi.finvoice)
+[![GoDoc](https://godoc.org/github.com/invopop/gobl.fi.finvoice?status.svg)](https://godoc.org/github.com/invopop/gobl.fi.finvoice)
+![Latest Tag](https://img.shields.io/github/v/tag/invopop/gobl.fi.finvoice)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/invopop/gobl.fi.finvoice)
+
 This module implements the Finvoice 3.0 requirements as a GOBL tax addon
 (`fi-finvoice-v3`). Finvoice conforms to EN 16931, so the addon `Requires` the
 EN 16931 addon and only layers the Finvoice-specific tightening on top —
