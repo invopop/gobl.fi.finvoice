@@ -287,7 +287,7 @@ func TestNormalization(t *testing.T) {
 		inv := testInvoiceStandard(t)
 		inv.Payment.Instructions.CreditTransfer[0].IBAN = "fi21 1234 5600 0007 85"
 		require.NoError(t, inv.Calculate())
-		assert.Equal(t, "FI2112345600000785", inv.Payment.Instructions.CreditTransfer[0].IBAN)
+		assert.Equal(t, "FI2112345600000785", inv.Payment.Instructions.CreditTransfer[0].IBAN.String())
 		assert.NoError(t, rules.Validate(inv))
 	})
 

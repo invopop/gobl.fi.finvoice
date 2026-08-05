@@ -1,8 +1,6 @@
 package finvoice
 
 import (
-	"strings"
-
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/pay"
@@ -76,14 +74,14 @@ func firstCreditTransferHasIBAN(val any) bool {
 	return cts[0] != nil && cts[0].IBAN != ""
 }
 
-// normalizePayInstructions strips the grouping spaces conventionally used
-// when displaying Finnish reference numbers and RF references.
+// normalizePayInstructions drops the grouping spaces conventionally used when
+// displaying Finnish reference numbers and RF references.
 func normalizePayInstructions(instr *pay.Instructions) {
-	instr.Ref = cbc.Code(strings.ReplaceAll(instr.Ref.String(), " ", ""))
+	instr.Ref = cbc.NormalizeAlphanumericalCode(instr.Ref)
 }
 
 // normalizePayCreditTransfer converts the IBAN to its machine form: no
 // grouping spaces, upper case.
 func normalizePayCreditTransfer(ct *pay.CreditTransfer) {
-	ct.IBAN = strings.ToUpper(strings.ReplaceAll(ct.IBAN, " ", ""))
+	ct.IBAN = cbc.NormalizeAlphanumericalCode(ct.IBAN)
 }
