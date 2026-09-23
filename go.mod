@@ -3,7 +3,7 @@ module github.com/invopop/gobl.fi.finvoice
 go 1.25.0
 
 require (
-	github.com/invopop/gobl v0.504.0
+	github.com/invopop/gobl v0.507.0
 	github.com/stretchr/testify v1.11.1
 )
 
