@@ -1,0 +1,159 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:eb="http://www.oasis-open.org/committees/ebxml-msg/schema/msg-header-2_0.xsd">
+<SOAP-ENV:Header>
+<eb:MessageHeader xmlns:eb="http://www.oasis-open.org/committees/ebxml-msg/schema/msg-header-2_0.xsd" SOAP-ENV:mustUnderstand="1" eb:id="20260922133003285">
+<eb:From>
+<eb:PartyId>003776543212</eb:PartyId>
+<eb:Role>Sender</eb:Role>
+</eb:From>
+<eb:From>
+<eb:PartyId>NDEAFIHH</eb:PartyId>
+<eb:Role>Intermediator</eb:Role>
+</eb:From>
+<eb:To>
+<eb:PartyId>003745678907</eb:PartyId>
+<eb:Role>Receiver</eb:Role>
+</eb:To>
+<eb:To>
+<eb:PartyId>003700020002</eb:PartyId>
+<eb:Role>Intermediator</eb:Role>
+</eb:To>
+<eb:CPAId>yoursandmycpa</eb:CPAId>
+<eb:ConversationId></eb:ConversationId>
+<eb:Service>Routing</eb:Service>
+<eb:Action>ProcessInvoice</eb:Action>
+<eb:MessageData>
+<eb:MessageId>MSG-2026-77</eb:MessageId>
+<eb:Timestamp>2026-09-22T11:12:12+03:00</eb:Timestamp>
+<eb:RefToMessageId/>
+</eb:MessageData>
+</eb:MessageHeader>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<eb:Manifest eb:id="Manifest" eb:version="2.0">
+<eb:Reference eb:id="Finvoice" xlink:href="MSG-2026-77">
+<eb:schema eb:location="http://www.finvoice.info/finvoice.xsd" eb:version="3.0"/>
+</eb:Reference>
+</eb:Manifest>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<?xml-stylesheet type="text/xsl" href="Finvoice.xsl"?>
+<Finvoice Version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Finvoice3.0.xsd">
+<MessageTransmissionDetails>
+<MessageSenderDetails>
+<FromIdentifier>003776543212</FromIdentifier>
+<FromIntermediator>NDEAFIHH</FromIntermediator>
+</MessageSenderDetails>
+<MessageReceiverDetails>
+<ToIdentifier>003745678907</ToIdentifier>
+<ToIntermediator>003700020002</ToIntermediator>
+</MessageReceiverDetails>
+<MessageDetails>
+<MessageIdentifier>MSG-2026-77</MessageIdentifier>
+<MessageTimeStamp>2026-09-22T11:12:12+03:00</MessageTimeStamp>
+</MessageDetails>
+</MessageTransmissionDetails>
+<SellerPartyDetails>
+<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
+<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>
+<SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
+<SellerPostalAddressDetails>
+<SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+<SellerTownName>Helsinki</SellerTownName>
+<SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</SellerPostalAddressDetails>
+</SellerPartyDetails>
+<SellerCommunicationDetails>
+<SellerPhoneNumberIdentifier>+358 9 123 4567</SellerPhoneNumberIdentifier>
+<SellerEmailaddressIdentifier>laskutus@lahettaja.example</SellerEmailaddressIdentifier>
+</SellerCommunicationDetails>
+<BuyerPartyDetails>
+<BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
+<BuyerOrganisationName>Vastaanottaja Oy</BuyerOrganisationName>
+<BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
+<BuyerPostalAddressDetails>
+<BuyerStreetName>Testitie 2</BuyerStreetName>
+<BuyerTownName>Espoo</BuyerTownName>
+<BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</BuyerPostalAddressDetails>
+</BuyerPartyDetails>
+<InvoiceDetails>
+<InvoiceTypeCode>INV01</InvoiceTypeCode>
+<InvoiceTypeCodeUN>380</InvoiceTypeCodeUN>
+<InvoiceTypeText>LASKU</InvoiceTypeText>
+<OriginCode>Original</OriginCode>
+<InvoiceNumber>2026-77</InvoiceNumber>
+<InvoiceDate Format="CCYYMMDD">20260922</InvoiceDate>
+<OrderIdentifier>PO-1</OrderIdentifier>
+<BuyerReferenceIdentifier>OSTAJAN VIITE</BuyerReferenceIdentifier>
+<RowsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">300,00</RowsTotalVatExcludedAmount>
+<InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">300,00</InvoiceTotalVatExcludedAmount>
+<InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">25,50</InvoiceTotalVatAmount>
+<InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">325,50</InvoiceTotalVatIncludedAmount>
+<VatSpecificationDetails>
+<VatBaseAmount AmountCurrencyIdentifier="EUR">100,00</VatBaseAmount>
+<VatRatePercent>25,5</VatRatePercent>
+<VatCode>S</VatCode>
+<VatRateAmount AmountCurrencyIdentifier="EUR">25,50</VatRateAmount>
+</VatSpecificationDetails>
+<VatSpecificationDetails>
+<VatBaseAmount AmountCurrencyIdentifier="EUR">200,00</VatBaseAmount>
+<VatRatePercent>0</VatRatePercent>
+<VatCode>E</VatCode>
+<VatRateAmount AmountCurrencyIdentifier="EUR">0,00</VatRateAmount>
+<VatFreeText>Terveydenhuoltopalvelu, AVL 34 §</VatFreeText>
+<VatExemptionReasonCode>VATEX-EU-132-1C</VatExemptionReasonCode>
+</VatSpecificationDetails>
+<PaymentTermsDetails>
+<PaymentTermsFreeText>14 pv netto</PaymentTermsFreeText>
+<InvoiceDueDate Format="CCYYMMDD">20261006</InvoiceDueDate>
+</PaymentTermsDetails>
+</InvoiceDetails>
+<InvoiceRow>
+<ArticleIdentifier>A-1</ArticleIdentifier>
+<ArticleName>Konsultointi</ArticleName>
+<InvoicedQuantity QuantityUnitCode="tuntia" QuantityUnitCodeUN="HUR">2</InvoicedQuantity>
+<UnitPriceAmount AmountCurrencyIdentifier="EUR">50,00</UnitPriceAmount>
+<RowPositionIdentifier>1</RowPositionIdentifier>
+<RowVatRatePercent>25,5</RowVatRatePercent>
+<RowVatCode>S</RowVatCode>
+<RowVatAmount AmountCurrencyIdentifier="EUR">25,50</RowVatAmount>
+<RowVatExcludedAmount AmountCurrencyIdentifier="EUR">100,00</RowVatExcludedAmount>
+<RowAmount AmountCurrencyIdentifier="EUR">125,50</RowAmount>
+</InvoiceRow>
+<InvoiceRow>
+<ArticleName>Hoitokäynti</ArticleName>
+<InvoicedQuantity QuantityUnitCode="kpl">1</InvoicedQuantity>
+<UnitPriceAmount AmountCurrencyIdentifier="EUR">200,00</UnitPriceAmount>
+<RowPositionIdentifier>2</RowPositionIdentifier>
+<RowVatRatePercent>0</RowVatRatePercent>
+<RowVatCode>E</RowVatCode>
+<RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
+<RowVatExcludedAmount AmountCurrencyIdentifier="EUR">200,00</RowVatExcludedAmount>
+<RowAmount AmountCurrencyIdentifier="EUR">200,00</RowAmount>
+</InvoiceRow>
+<EpiDetails>
+<EpiIdentificationDetails>
+<EpiDate Format="CCYYMMDD">20260922</EpiDate>
+<EpiReference>RF18539007547034</EpiReference>
+</EpiIdentificationDetails>
+<EpiPartyDetails>
+<EpiBfiPartyDetails>
+<EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+</EpiBfiPartyDetails>
+<EpiBeneficiaryPartyDetails>
+<EpiNameAddressDetails>Lähettäjä Oy</EpiNameAddressDetails>
+<EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+</EpiBeneficiaryPartyDetails>
+</EpiPartyDetails>
+<EpiPaymentInstructionDetails>
+<EpiRemittanceInfoIdentifier IdentificationSchemeName="ISO">RF18539007547034</EpiRemittanceInfoIdentifier>
+<EpiInstructedAmount AmountCurrencyIdentifier="EUR">325,50</EpiInstructedAmount>
+<EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+<EpiDateOptionDate Format="CCYYMMDD">20261006</EpiDateOptionDate>
+<EpiPaymentMeansCode>58</EpiPaymentMeansCode>
+</EpiPaymentInstructionDetails>
+</EpiDetails>
+</Finvoice>

@@ -1,0 +1,138 @@
+{
+	"$regime": "FI",
+	"$addons": [
+		"eu-en16931-v2017",
+		"fi-finvoice-v3"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "credit-note",
+	"code": "1043",
+	"issue_date": "2026-09-25",
+	"currency": "EUR",
+	"preceding": [
+		{
+			"issue_date": "2026-09-22",
+			"code": "1042"
+		}
+	],
+	"tax": {
+		"rounding": "currency",
+		"ext": {
+			"untdid-document-type": "381"
+		}
+	},
+	"supplier": {
+		"name": "Lähettäjä Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "76543212"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003776543212"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Esimerkkikatu 1",
+				"locality": "Helsinki",
+				"code": "00100",
+				"country": "FI"
+			}
+		]
+	},
+	"customer": {
+		"name": "Vastaanottaja Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "45678907"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003745678907"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Testitie 2",
+				"locality": "Espoo",
+				"code": "02100",
+				"country": "FI"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "2",
+			"item": {
+				"name": "Palautus",
+				"price": "50.00",
+				"unit": "piece"
+			},
+			"sum": "100.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "25.5%",
+					"ext": {
+						"untdid-tax-category": "S"
+					}
+				}
+			],
+			"total": "100.00"
+		}
+	],
+	"payment": {
+		"terms": {
+			"due_dates": [
+				{
+					"date": "2026-10-09",
+					"amount": "125.50",
+					"percent": "100%"
+				}
+			]
+		},
+		"instructions": {
+			"key": "credit-transfer",
+			"ref": "1043002",
+			"credit_transfer": [
+				{
+					"iban": "FI2112345600000785",
+					"bic": "NDEAFIHH"
+				}
+			],
+			"ext": {
+				"untdid-payment-means": "30"
+			}
+		}
+	},
+	"totals": {
+		"sum": "100.00",
+		"total": "100.00",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"ext": {
+								"untdid-tax-category": "S"
+							},
+							"base": "100.00",
+							"percent": "25.5%",
+							"amount": "25.50"
+						}
+					],
+					"amount": "25.50"
+				}
+			],
+			"sum": "25.50"
+		},
+		"tax": "25.50",
+		"total_with_tax": "125.50",
+		"payable": "125.50"
+	}
+}

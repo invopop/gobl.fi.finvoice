@@ -1,0 +1,62 @@
+$schema: "https://gobl.org/draft-0/bill/invoice"
+$regime: "FI"
+$addons:
+  - "fi-finvoice-v3"
+uuid: "8f2d6c3a-1e4b-4f7a-b9c0-2d3e4f5a6b7c"
+type: "credit-note"
+series: "2026"
+code: "1002"
+issue_date: "2026-09-10"
+currency: "EUR"
+preceding:
+  - series: "2026"
+    code: "1001"
+    issue_date: "2026-09-01"
+supplier:
+  name: "Myyjä Oy"
+  tax_id:
+    country: "FI"
+    code: "76543212"
+  endpoints:
+    - uri: "iso6523-actorid-upis::0216:003776543212"
+  addresses:
+    - street: "Esimerkkikatu 1"
+      locality: "Helsinki"
+      code: "00100"
+      country: "FI"
+customer:
+  name: "Ostaja Oy"
+  tax_id:
+    country: "FI"
+    code: "45678907"
+  endpoints:
+    - uri: "iso6523-actorid-upis::0216:003745678907"
+  addresses:
+    - street: "Testitie 2"
+      locality: "Espoo"
+      code: "02100"
+      country: "FI"
+lines:
+  - quantity: 2
+    item:
+      name: "Käsikirja"
+      ref: "BK-100"
+      price: "25.00"
+      unit: "item"
+    taxes:
+      - cat: VAT
+        rate: reduced
+payment:
+  instructions:
+    key: "credit-transfer+sepa"
+    ref: "RF18539007547034"
+    credit_transfer:
+      - iban: "FI2112345600000785"
+        bic: "NDEAFIHH"
+  terms:
+    due_dates:
+      - date: "2026-09-24"
+        percent: "100%"
+notes:
+  - key: "reason"
+    text: "Palautettu tuote"

@@ -1,0 +1,163 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
+		"dig": {
+			"alg": "sha256",
+			"val": "ba10ffce41089903cc3700f7ce97830ad09ae8585793bf5ce8c28fc66d9c0de5"
+		},
+		"from": "iso6523-actorid-upis::0216:003776543212",
+		"to": "iso6523-actorid-upis::0216:003745678907"
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "FI",
+		"$addons": [
+			"eu-en16931-v2017",
+			"fi-finvoice-v3"
+		],
+		"uuid": "8f2d6c3a-1e4b-4f7a-b9c0-2d3e4f5a6b7c",
+		"type": "credit-note",
+		"series": "2026",
+		"code": "1002",
+		"issue_date": "2026-09-10",
+		"currency": "EUR",
+		"preceding": [
+			{
+				"issue_date": "2026-09-01",
+				"series": "2026",
+				"code": "1001"
+			}
+		],
+		"tax": {
+			"ext": {
+				"untdid-document-type": "381"
+			}
+		},
+		"supplier": {
+			"name": "Myyjä Oy",
+			"tax_id": {
+				"country": "FI",
+				"code": "76543212"
+			},
+			"endpoints": [
+				{
+					"uri": "iso6523-actorid-upis::0216:003776543212"
+				}
+			],
+			"addresses": [
+				{
+					"street": "Esimerkkikatu 1",
+					"locality": "Helsinki",
+					"code": "00100",
+					"country": "FI"
+				}
+			]
+		},
+		"customer": {
+			"name": "Ostaja Oy",
+			"tax_id": {
+				"country": "FI",
+				"code": "45678907"
+			},
+			"endpoints": [
+				{
+					"uri": "iso6523-actorid-upis::0216:003745678907"
+				}
+			],
+			"addresses": [
+				{
+					"street": "Testitie 2",
+					"locality": "Espoo",
+					"code": "02100",
+					"country": "FI"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "2",
+				"item": {
+					"ref": "BK-100",
+					"name": "Käsikirja",
+					"price": "25.00",
+					"unit": "item"
+				},
+				"sum": "50.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "reduced",
+						"percent": "13.5%",
+						"ext": {
+							"untdid-tax-category": "S"
+						}
+					}
+				],
+				"total": "50.00"
+			}
+		],
+		"payment": {
+			"terms": {
+				"due_dates": [
+					{
+						"date": "2026-09-24",
+						"amount": "56.75",
+						"percent": "100%"
+					}
+				]
+			},
+			"instructions": {
+				"key": "credit-transfer+sepa",
+				"ref": "RF18539007547034",
+				"credit_transfer": [
+					{
+						"iban": "FI2112345600000785",
+						"bic": "NDEAFIHH"
+					}
+				],
+				"ext": {
+					"untdid-payment-means": "58"
+				}
+			}
+		},
+		"totals": {
+			"sum": "50.00",
+			"total": "50.00",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"ext": {
+									"untdid-tax-category": "S"
+								},
+								"base": "50.00",
+								"percent": "13.5%",
+								"amount": "6.75"
+							}
+						],
+						"amount": "6.75"
+					}
+				],
+				"sum": "6.75"
+			},
+			"tax": "6.75",
+			"total_with_tax": "56.75",
+			"payable": "56.75"
+		},
+		"notes": [
+			{
+				"key": "reason",
+				"text": "Palautettu tuote",
+				"ext": {
+					"untdid-text-subject": "ACD"
+				}
+			}
+		]
+	}
+}
