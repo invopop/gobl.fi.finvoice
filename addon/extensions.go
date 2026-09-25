@@ -12,7 +12,8 @@ const ExtKeyOperator cbc.Key = "fi-finvoice-operator"
 
 var extensions = []*cbc.Definition{
 	{
-		Key: ExtKeyOperator,
+		Key:     ExtKeyOperator,
+		Pattern: `^[A-Za-z0-9]{2,35}$`,
 		Name: i18n.String{
 			i18n.EN: "Finnish e-invoice operator",
 			i18n.FI: "Verkkolaskuoperaattori",

@@ -6,7 +6,6 @@ import (
 
 	// Register the addon so example documents declaring fi-finvoice-v3
 	// normalize and validate.
-	_ "github.com/invopop/gobl.fi.finvoice/addon"
 
 	"github.com/invopop/gobl/pkg/examples"
 )

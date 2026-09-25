@@ -291,6 +291,24 @@ func TestParseAddresses(t *testing.T) {
 		assert.Equal(t, cbc.Code("HELSFIHH"), inv.Supplier.Ext.Get(finvoice.ExtKeyOperator))
 		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003745678907"), inv.Customer.Endpoints[0].URI)
 		assert.Equal(t, cbc.Code(receiverOperator), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
+
+		t.Run("with the declaration in front of the frame", func(t *testing.T) {
+			decl := `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
+			data := decl + soap + strings.TrimPrefix(string(delivery{}.bytes()), decl)
+			env, err := fifinvoice.Parse([]byte(data))
+			require.NoError(t, err)
+			inv := env.Extract().(*bill.Invoice)
+			assert.Equal(t, cbc.Code("HELSFIHH"), inv.Supplier.Ext.Get(finvoice.ExtKeyOperator))
+			assert.Equal(t, cbc.Code(receiverOperator), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
+		})
+	})
+	t.Run("a document without a seller fails validation", func(t *testing.T) {
+		data := string(delivery{}.bytes())
+		start, end := strings.Index(data, "<SellerPartyDetails>"), strings.Index(data, "</SellerPartyDetails>")
+		data = data[:start] + data[end+len("</SellerPartyDetails>"):]
+		env, err := fifinvoice.Parse([]byte(data))
+		require.NoError(t, err)
+		require.ErrorContains(t, env.Validate(), "supplier")
 	})
 }
 
@@ -306,9 +324,7 @@ func TestParseIdentities(t *testing.T) {
 	t.Run("a Y-tunnus in the VAT field is no VAT number", func(t *testing.T) {
 		details := `<InvoiceTypeCode>INV01</InvoiceTypeCode><InvoiceTypeText>X</InvoiceTypeText><OriginCode>Original</OriginCode><InvoiceNumber>77</InvoiceNumber>`
 		d := delivery{details: details, noVATNumber: true}
-		data := strings.Replace(string(d.bytes()), `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>`, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, 1)
-		data = strings.Replace(data, `<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>`, ``, 1)
-		data = strings.Replace(data, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, 1)
+		data := strings.Replace(string(d.bytes()), `</SellerOrganisationName>`, `</SellerOrganisationName><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, 1)
 		env, err := fifinvoice.Parse([]byte(data))
 		require.NoError(t, err)
 		inv := env.Extract().(*bill.Invoice)
@@ -426,6 +442,17 @@ func TestParseTotals(t *testing.T) {
 	t.Run("currency from the total", func(t *testing.T) {
 		inv := parseDelivery(t, delivery{currency: "SEK"})
 		assert.Equal(t, currency.SEK, inv.Currency)
+	})
+	t.Run("text rows alone with a zero total", func(t *testing.T) {
+		rows := `<InvoiceRow><RowFreeText>Ei laskutettavaa</RowFreeText></InvoiceRow>`
+		inv := parseDelivery(t, delivery{rows: rows, total: "0,00"})
+		assert.Empty(t, inv.Lines)
+		assert.Equal(t, "Ei laskutettavaa", inv.Notes[0].Text)
+	})
+	t.Run("text rows alone with a stated total are refused", func(t *testing.T) {
+		rows := `<InvoiceRow><RowFreeText>Ei laskutettavaa</RowFreeText></InvoiceRow>`
+		_, err := fifinvoice.Parse(delivery{rows: rows, total: "10,00"}.bytes())
+		require.ErrorContains(t, err, "stated total 10.00 does not match")
 	})
 	t.Run("unknown currency is refused", func(t *testing.T) {
 		_, err := fifinvoice.Parse(delivery{currency: "XXX"}.bytes())

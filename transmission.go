@@ -10,7 +10,13 @@ import (
 )
 
 // specificationEN16931 is the EN 16931 specification identifier (BT-24).
-const specificationEN16931 = "EN16931"
+const (
+	specificationEN16931 = "EN16931"
+	// intermediatorMaxLength bounds an operator identifier in the frame.
+	intermediatorMaxLength = 35
+	// messageIDMaxLength bounds MessageIdentifier.
+	messageIDMaxLength = 48
+)
 
 // MessageTransmissionDetails is the routing frame: who sends the message,
 // who receives it, and through which operators.
@@ -60,17 +66,28 @@ func (c *converter) newTransmission() (*MessageTransmissionDetails, error) {
 	if to == nil {
 		return nil, fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003745678907", iso.ActorIDScheme)
 	}
+	senderOperator, err := identifier("sender operator", c.opts.senderOperator, intermediatorMaxLength)
+	if err != nil {
+		return nil, err
+	}
+	if tooShort(senderOperator) {
+		return nil, fmt.Errorf("sender operator %q is shorter than the %d characters Finvoice requires", senderOperator, minTextLength)
+	}
+	messageID, err := identifier("message identifier", c.opts.messageID, messageIDMaxLength)
+	if err != nil {
+		return nil, err
+	}
 	return &MessageTransmissionDetails{
 		Sender: MessageSenderDetails{
 			Identifier:    *from,
-			Intermediator: c.opts.senderOperator,
+			Intermediator: senderOperator,
 		},
 		Receiver: MessageReceiverDetails{
 			Identifier:    *to,
 			Intermediator: receiverOperator,
 		},
 		Message: MessageDetails{
-			Identifier:              c.opts.messageID,
+			Identifier:              messageID,
 			Timestamp:               formatTime(c.opts.messageTime),
 			SpecificationIdentifier: specificationEN16931,
 		},

@@ -356,6 +356,53 @@ func TestConvertLimits(t *testing.T) {
 		doc := convertAdjusted(t, env)
 		assert.Empty(t, doc.SellerCommunication.Email)
 	})
+	t.Run("long website left out", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Supplier.Websites[0].URL = "https://myyja.example/" + strings.Repeat("a", 60)
+		doc := convertAdjusted(t, env)
+		assert.Empty(t, doc.SellerInformation.Website)
+	})
+	t.Run("long quantity fails", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Lines[0].Quantity = num.MakeAmount(1234567890123456, 5)
+		require.NoError(t, env.Calculate())
+		_, err := fifinvoice.Convert(env, testOptions()...)
+		require.ErrorContains(t, err, `quantity "12345678901,23456"`)
+	})
+	t.Run("identifiers too long fail", func(t *testing.T) {
+		long := strings.Repeat("9", 80)
+		tests := []struct {
+			name, want string
+			adjust     func(inv *bill.Invoice)
+		}{
+			{"legal identity", `legal identity "9999`, func(inv *bill.Invoice) {
+				inv.Customer.TaxID = nil
+				inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: cbc.Code(long)}}
+			}},
+			{"buyer reference", `buyer reference "9999`, func(inv *bill.Invoice) { inv.Ordering.Code = cbc.Code(long) }},
+			{"order reference", `order reference "9999`, func(inv *bill.Invoice) {
+				inv.Ordering.Purchases = []*org.DocumentRef{{Code: cbc.Code(long)}}
+			}},
+			{"article identifier", `article identifier "9999`, func(inv *bill.Invoice) { inv.Lines[0].Item.Ref = cbc.Code(long) }},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				env, inv := exampleEnvelope(t, "invoice")
+				tt.adjust(inv)
+				require.NoError(t, env.Calculate())
+				_, err := fifinvoice.Convert(env, testOptions()...)
+				require.ErrorContains(t, err, tt.want)
+			})
+		}
+	})
+	t.Run("caller identifiers out of range fail", func(t *testing.T) {
+		env, _ := exampleEnvelope(t, "invoice")
+		require.NoError(t, env.Calculate())
+		_, err := fifinvoice.Convert(env, fifinvoice.WithSenderOperator("X"))
+		require.ErrorContains(t, err, `sender operator "X"`)
+		_, err = fifinvoice.Convert(env, fifinvoice.WithSenderOperator(senderOperator), fifinvoice.WithMessageID(strings.Repeat("m", 49)))
+		require.ErrorContains(t, err, "message identifier")
+	})
 }
 
 // TestConvertOmissions pins what Finvoice has no room for.

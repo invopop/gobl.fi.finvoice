@@ -139,6 +139,14 @@ func TestBillInvoiceRules(t *testing.T) {
 		assert.ErrorContains(t, err, "customer name must be at least two characters")
 	})
 
+	t.Run("one-character payee name", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Payment.Payee = &org.Party{Name: "P"}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "payee name must be at least two characters")
+	})
+
 	t.Run("missing payment", func(t *testing.T) {
 		inv := testInvoiceStandard(t)
 		inv.Payment = nil

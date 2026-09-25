@@ -159,7 +159,9 @@ func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
 	if err := c.applyPreceding(d); err != nil {
 		return nil, err
 	}
-	c.applyOrdering(d)
+	if err := c.applyOrdering(d); err != nil {
+		return nil, err
+	}
 	c.applyTotals(d)
 	d.VatSpecifications = c.newVatSpecifications()
 	for _, n := range inv.Notes {
@@ -173,14 +175,9 @@ func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
 	return d, nil
 }
 
-// invoiceNumber joins the series and code into the document's one number,
-// refusing one too long for the element rather than cutting an identifier.
+// invoiceNumber joins the series and code into the document's one number.
 func invoiceNumber(series, code cbc.Code) (string, error) {
-	number := series.Join(code).String()
-	if tooLong(number, invoiceNumberMaxLength) {
-		return "", fmt.Errorf("invoice number %q is longer than the %d characters Finvoice allows", number, invoiceNumberMaxLength)
-	}
-	return number, nil
+	return identifier("invoice number", series.Join(code).String(), invoiceNumberMaxLength)
 }
 
 // invoiceType maps the GOBL type to the Finvoice code and its English text.
@@ -219,32 +216,46 @@ func (c *converter) applyPreceding(d *InvoiceDetails) error {
 	return nil
 }
 
-func (c *converter) applyOrdering(d *InvoiceDetails) {
+func (c *converter) applyOrdering(d *InvoiceDetails) error {
 	o := c.inv.Ordering
 	if o == nil {
-		return
+		return nil
 	}
 	if o.Period != nil {
 		d.PeriodStartDate = newDatePtr(o.Period.Start)
 		d.PeriodEndDate = newDatePtr(o.Period.End)
 	}
-	d.BuyerReference = cut(o.Code.String(), referenceMaxLength)
-	if ref := firstDocumentRef(o.Sales); ref != nil {
-		d.SellerReference = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
-	}
 	if ref := firstDocumentRef(o.Purchases); ref != nil {
-		d.OrderIdentifier = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
 		d.OrderDate = newDatePtr(ref.IssueDate)
 	}
-	if ref := firstDocumentRef(o.Contracts); ref != nil {
-		d.AgreementIdentifier = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
+	refs := []struct {
+		name string
+		code cbc.Code
+		dst  *string
+	}{
+		{"buyer reference", o.Code, &d.BuyerReference},
+		{"sales reference", documentRefCode(o.Sales), &d.SellerReference},
+		{"order reference", documentRefCode(o.Purchases), &d.OrderIdentifier},
+		{"agreement reference", documentRefCode(o.Contracts), &d.AgreementIdentifier},
+		{"project reference", documentRefCode(o.Projects), &d.ProjectReference},
+		{"tender reference", documentRefCode(o.Tender), &d.TenderReference},
 	}
-	if ref := firstDocumentRef(o.Projects); ref != nil {
-		d.ProjectReference = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
+	for _, ref := range refs {
+		s, err := identifier(ref.name, ref.code.String(), referenceMaxLength)
+		if err != nil {
+			return err
+		}
+		*ref.dst = s
 	}
-	if ref := firstDocumentRef(o.Tender); ref != nil {
-		d.TenderReference = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
+	return nil
+}
+
+// documentRefCode is the full number of the first reference, if any.
+func documentRefCode(refs []*org.DocumentRef) cbc.Code {
+	if ref := firstDocumentRef(refs); ref != nil {
+		return ref.Series.Join(ref.Code)
 	}
+	return cbc.CodeEmpty
 }
 
 func firstDocumentRef(refs []*org.DocumentRef) *org.DocumentRef {

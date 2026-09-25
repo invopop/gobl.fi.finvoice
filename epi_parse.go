@@ -92,7 +92,10 @@ func creditTransfer(account Account) *pay.CreditTransfer {
 // the seller.
 func (p *parser) payee(epi *EpiDetails) *org.Party {
 	name := strings.TrimSpace(epi.Party.Beneficiary.NameAddress)
-	seller := joinNames(p.doc.Seller.Name)
+	var seller string
+	if p.doc.Seller != nil {
+		seller = joinNames(p.doc.Seller.Name)
+	}
 	if name == "" || name == seller || name == cut(seller, beneficiaryNameMaxLength) {
 		return nil
 	}

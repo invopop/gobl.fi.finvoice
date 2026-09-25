@@ -25,6 +25,10 @@ const (
 	streetLines = 3
 	// emailMaxLength bounds an email address, which is left out when longer.
 	emailMaxLength = 70
+	// websiteMaxLength bounds the seller's web address, left out when longer.
+	websiteMaxLength = 70
+	// identityMaxLength bounds a party's legal registration identifier.
+	identityMaxLength = 35
 )
 
 // businessID is a Finnish Y-tunnus: seven digits, a hyphen and a check digit.
@@ -136,10 +140,14 @@ type postalAddress struct {
 	postOfficeBox string
 }
 
-func (c *converter) newSeller() *SellerPartyDetails {
+func (c *converter) newSeller() (*SellerPartyDetails, error) {
 	p := c.inv.Supplier
+	id, err := newPartyIdentifier(p)
+	if err != nil {
+		return nil, err
+	}
 	s := &SellerPartyDetails{
-		Identifier:  newPartyIdentifier(p),
+		Identifier:  id,
 		Name:        split(p.Name, nameMaxLength, nameLines),
 		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
@@ -154,13 +162,17 @@ func (c *converter) newSeller() *SellerPartyDetails {
 			PostOfficeBox: a.postOfficeBox,
 		}
 	}
-	return s
+	return s, nil
 }
 
-func (c *converter) newBuyer() *BuyerPartyDetails {
+func (c *converter) newBuyer() (*BuyerPartyDetails, error) {
 	p := c.inv.Customer
+	id, err := newPartyIdentifier(p)
+	if err != nil {
+		return nil, err
+	}
 	b := &BuyerPartyDetails{
-		Identifier:  newPartyIdentifier(p),
+		Identifier:  id,
 		Name:        split(p.Name, nameMaxLength, nameLines),
 		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
@@ -175,23 +187,27 @@ func (c *converter) newBuyer() *BuyerPartyDetails {
 			PostOfficeBox: a.postOfficeBox,
 		}
 	}
-	return b
+	return b, nil
 }
 
 // newDeliveryParty writes the delivery receiver, which Finvoice only takes
 // with an address.
-func (c *converter) newDeliveryParty() *DeliveryPartyDetails {
+func (c *converter) newDeliveryParty() (*DeliveryPartyDetails, error) {
 	d := c.inv.Delivery
 	if d == nil || d.Receiver == nil {
-		return nil
+		return nil, nil
 	}
 	a := newPostalAddress(d.Receiver)
 	name := split(d.Receiver.Name, addressMaxLength, nameLines)
 	if a == nil || len(name) == 0 {
-		return nil
+		return nil, nil
+	}
+	id, err := newPartyIdentifier(d.Receiver)
+	if err != nil {
+		return nil, err
 	}
 	return &DeliveryPartyDetails{
-		Identifier: newPartyIdentifier(d.Receiver),
+		Identifier: id,
 		Name:       name,
 		TaxCode:    partyTaxCode(d.Receiver),
 		Address: &DeliveryPostalAddressDetails{
@@ -202,7 +218,7 @@ func (c *converter) newDeliveryParty() *DeliveryPartyDetails {
 			CountryCode:   a.countryCode,
 			PostOfficeBox: a.postOfficeBox,
 		},
-	}
+	}, nil
 }
 
 // applySellerDetails writes the seller elements that sit outside
@@ -215,7 +231,7 @@ func (c *converter) applySellerDetails(doc *Document) {
 		doc.SellerCommunication = &SellerCommunicationDetails{Phone: phone, Email: email}
 	}
 	info := &SellerInformationDetails{}
-	if len(p.Websites) > 0 && p.Websites[0] != nil {
+	if len(p.Websites) > 0 && p.Websites[0] != nil && !tooLong(p.Websites[0].URL, websiteMaxLength) {
 		info.Website = p.Websites[0].URL
 	}
 	info.Accounts = c.newSellerAccounts()
@@ -279,24 +295,28 @@ func (c *converter) applyDelivery(doc *Document) {
 // newPartyIdentifier writes the party's legal registration: the Y-tunnus
 // for a Finnish party, else its first legal-scope identity with the ISO 6523
 // scheme the EN 16931 addon records on it.
-func newPartyIdentifier(p *org.Party) *Identifier {
+func newPartyIdentifier(p *org.Party) (*Identifier, error) {
 	if p == nil {
-		return nil
+		return nil, nil
 	}
 	if p.TaxID != nil && p.TaxID.Country == l10n.FI.Tax() {
 		if m := businessID.FindStringSubmatch(p.TaxID.Code.String()); m != nil {
-			return &Identifier{Value: m[1] + "-" + m[2]}
+			return &Identifier{Value: m[1] + "-" + m[2]}, nil
 		}
 	}
 	for _, id := range p.Identities {
 		if id != nil && id.Scope == org.IdentityScopeLegal && id.Code != "" {
-			return &Identifier{
-				Value:    id.Code.String(),
-				SchemeID: id.Ext.Get(iso.ExtKeySchemeID).String(),
+			code, err := identifier("legal identity", id.Code.String(), identityMaxLength)
+			if err != nil {
+				return nil, err
 			}
+			return &Identifier{
+				Value:    code,
+				SchemeID: id.Ext.Get(iso.ExtKeySchemeID).String(),
+			}, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // partyTaxCode is the VAT number: country code plus the tax identity code.

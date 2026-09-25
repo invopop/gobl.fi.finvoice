@@ -25,4 +25,11 @@ func TestOperatorExtension(t *testing.T) {
 		require.NoError(t, rules.Validate(inv))
 		assert.Equal(t, cbc.Code("003700010001"), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
 	})
+
+	t.Run("one-character operator rejected", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{finvoice.ExtKeyOperator: "X"})
+		require.NoError(t, inv.Calculate())
+		assert.ErrorContains(t, rules.Validate(inv), "operator identifier")
+	})
 }

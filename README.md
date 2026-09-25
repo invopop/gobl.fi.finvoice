@@ -29,8 +29,10 @@ needed to build the `EpiDetails` payment block, which is mandatory on every
 Finvoice invoice, credit notes included:
 
 - **Customer**: must be present and named (`BuyerOrganisationName`).
-- **Names**: supplier and customer names need at least two characters, the
-  schema's minimum for an organisation name.
+- **Names**: supplier, customer and payee names need at least two
+  characters, the schema's minimum for a name.
+- **Operators**: `fi-finvoice-operator` takes two to thirty-five letters
+  and digits, the shape of an OVT code or a BIC.
 - **Payment details**: required unconditionally, not only when an amount is
   due as in EN 16931 (BR-CO-25).
 - **Credit transfer**: payment instructions must use the `credit-transfer`
@@ -90,12 +92,13 @@ instructions the addon requires.
   `INV07` from the GOBL type and tags, and `InvoiceTypeCodeUN` the UNTDID
   1001 code the EN 16931 addon records.
 - **Identifiers the format cannot hold are refused, not cut.** An invoice
-  number or payment reference longer than its element, or payment terms with
-  more than one due date, return an error. Long names and texts are spread
-  over the repeats the schema allows and cut beyond them. An email too long
-  for its element, an alias or region shorter than the two characters the
-  schema requires, and a postal address without a town and post code are
-  left out.
+  number, payment reference, ordering reference, legal identity, article
+  identifier, quantity, sender operator or message identifier longer than
+  its element, or payment terms with more than one due date, return an
+  error. Long names and texts are spread over the repeats the schema allows
+  and cut beyond them. An email or web address too long for its element, an
+  alias or region shorter than the two characters the schema requires, and a
+  postal address without a town and post code are left out.
 - **Row VAT amounts are not written.** GOBL works the tax out per rate, so
   per-row VAT amounts would not add up to the breakdown; the optional
   `RowVatAmount` and `RowAmount` are left to it.

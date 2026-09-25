@@ -1,11 +1,14 @@
 package finvoice
 
 import (
+	"fmt"
+
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/pay"
 	"github.com/invopop/gobl/rules"
 	"github.com/invopop/gobl/rules/is"
+	"github.com/invopop/gobl/tax"
 )
 
 // minNameLength is the schema's minimum for an organisation name.
@@ -26,6 +29,11 @@ func billInvoiceRules() *rules.Set {
 					is.RuneLength(minNameLength, 0),
 				),
 			),
+			rules.Field("ext",
+				rules.Assert("16", fmt.Sprintf("supplier '%s' extension must be an operator identifier (Finvoice FromIntermediator)", ExtKeyOperator),
+					tax.ExtensionHasValidCode(ExtKeyOperator),
+				),
+			),
 		),
 		rules.Field("customer",
 			rules.Assert("01", "customer is required (Finvoice BuyerPartyDetails)", is.Present),
@@ -35,9 +43,21 @@ func billInvoiceRules() *rules.Set {
 					is.RuneLength(minNameLength, 0),
 				),
 			),
+			rules.Field("ext",
+				rules.Assert("17", fmt.Sprintf("customer '%s' extension must be an operator identifier (Finvoice ToIntermediator)", ExtKeyOperator),
+					tax.ExtensionHasValidCode(ExtKeyOperator),
+				),
+			),
 		),
 		rules.Field("payment",
 			rules.Assert("03", "payment details are required (Finvoice EpiDetails)", is.Present),
+			rules.Field("payee",
+				rules.Field("name",
+					rules.Assert("15", "payee name must be at least two characters (Finvoice EpiNameAddressDetails)",
+						is.RuneLength(minNameLength, 0),
+					),
+				),
+			),
 			rules.Field("instructions",
 				rules.Assert("04", "payment instructions are required (Finvoice EpiDetails)", is.Present),
 				rules.Field("key",

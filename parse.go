@@ -79,7 +79,11 @@ func Parse(data []byte) (*gobl.Envelope, error) {
 		doc.Transmission = routing
 	}
 
-	inv, err := doc.goblInvoice()
+	p, err := newParser(doc)
+	if err != nil {
+		return nil, err
+	}
+	inv, err := p.invoice()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +91,7 @@ func Parse(data []byte) (*gobl.Envelope, error) {
 	if err := env.Insert(inv); err != nil {
 		return nil, err
 	}
-	if err := doc.reconcileTotals(env, inv); err != nil {
+	if err := p.reconcileTotals(env, inv); err != nil {
 		return nil, err
 	}
 	return env, nil
@@ -95,7 +99,7 @@ func Parse(data []byte) (*gobl.Envelope, error) {
 
 // splitFrame separates a transport frame from the document. The document
 // starts at the last XML declaration before its root, so its charset stays
-// known; the frame is whatever precedes that.
+// known; the frame is everything else before the root.
 func splitFrame(data []byte) (frame, body []byte) {
 	loc := finvoiceStart.FindIndex(data)
 	if loc == nil {
@@ -106,10 +110,11 @@ func splitFrame(data []byte) (frame, body []byte) {
 		return data[:loc[0]], data[loc[0]:]
 	}
 	last := decls[len(decls)-1]
-	body = make([]byte, 0, len(data)-loc[0]+last[1]-last[0]+1)
+	frame = append(frame, data[:last[0]]...)
+	frame = append(frame, data[last[1]:loc[0]]...)
 	body = append(body, data[last[0]:last[1]]...)
 	body = append(body, '\n')
-	return data[:last[0]], append(body, data[loc[0]:]...)
+	return frame, append(body, data[loc[0]:]...)
 }
 
 // charsetReader decodes the single-byte charsets Finvoice documents declare.
@@ -138,11 +143,14 @@ type parser struct {
 	// negate flips every amount back to positive: a Finvoice credit note is
 	// a zero or negative document, a GOBL one is not.
 	negate bool
+	typ    cbc.Key
 	// stated is the total the document declares, VAT included.
 	stated num.Amount
 }
 
-func (d *Document) goblInvoice() (*bill.Invoice, error) {
+// newParser reads the document's type, currency and stated total, which the
+// rest of the reading depends on.
+func newParser(d *Document) (*parser, error) {
 	det := d.InvoiceDetails
 	if det == nil {
 		return nil, errMissingInvoiceDetails
@@ -151,31 +159,7 @@ func (d *Document) goblInvoice() (*bill.Invoice, error) {
 	if err != nil {
 		return nil, err
 	}
-	inv := &bill.Invoice{
-		Addons: tax.WithAddons(finvoice.V3),
-		Tax: &bill.Tax{
-			// Finvoice amounts carry the currency's decimals and its totals
-			// add them up, which is what currency rounding reproduces.
-			Rounding: tax.RoundingRuleCurrency,
-		},
-		Type: typ,
-		Code: cbc.Code(strings.TrimSpace(det.InvoiceNumber)),
-	}
-	if tags := invoiceTypeTags[det.TypeCodeUN]; len(tags) > 0 {
-		inv.SetTags(tags...)
-	} else if det.TypeCode.Value == typeCodeSelfBilling {
-		inv.SetTags(tax.TagSelfBilled)
-	}
-
-	if det.InvoiceDate != nil {
-		date, err := parseDate(det.InvoiceDate.Value)
-		if err != nil {
-			return nil, fmt.Errorf("invoice date: %w", err)
-		}
-		inv.IssueDate = date
-	}
-
-	p := &parser{doc: d, det: det, cur: currency.EUR}
+	p := &parser{doc: d, det: det, typ: typ, cur: currency.EUR}
 	if det.TotalVatIncludedAmount == nil {
 		return nil, errors.New("document has no InvoiceTotalVatIncludedAmount")
 	}
@@ -189,17 +173,44 @@ func (d *Document) goblInvoice() (*bill.Invoice, error) {
 	if err != nil {
 		return nil, fmt.Errorf("stated total %q: %w", det.TotalVatIncludedAmount.Value, err)
 	}
-	p.negate = inv.Type.In(bill.InvoiceTypeCreditNote) && stated.IsNegative()
+	p.negate = typ.In(bill.InvoiceTypeCreditNote) && stated.IsNegative()
 	if p.negate {
 		stated = stated.Negate()
 	}
 	p.stated = stated
-	inv.Currency = p.cur
+	return p, nil
+}
+
+func (p *parser) invoice() (*bill.Invoice, error) {
+	det := p.det
+	inv := &bill.Invoice{
+		Addons: tax.WithAddons(finvoice.V3),
+		Tax: &bill.Tax{
+			// Finvoice amounts carry the currency's decimals and its totals
+			// add them up, which is what currency rounding reproduces.
+			Rounding: tax.RoundingRuleCurrency,
+		},
+		Type:     p.typ,
+		Code:     cbc.Code(strings.TrimSpace(det.InvoiceNumber)),
+		Currency: p.cur,
+	}
+	if tags := invoiceTypeTags[det.TypeCodeUN]; len(tags) > 0 {
+		inv.SetTags(tags...)
+	} else if det.TypeCode.Value == typeCodeSelfBilling {
+		inv.SetTags(tax.TagSelfBilled)
+	}
+
+	var err error
+	if det.InvoiceDate != nil {
+		if inv.IssueDate, err = parseDate(det.InvoiceDate.Value); err != nil {
+			return nil, fmt.Errorf("invoice date: %w", err)
+		}
+	}
 
 	inv.Supplier = p.supplier()
 	inv.Customer = p.buyer()
 	p.applyFrame(inv)
-	if inv.Supplier.TaxID == nil {
+	if inv.Supplier == nil || inv.Supplier.TaxID == nil {
 		inv.SetRegime(l10n.FI.Tax())
 	}
 
@@ -272,21 +283,19 @@ func (p *parser) reconcileTolerance(rows int) num.Amount {
 // reconcileTotals keeps the total the sender stated: a difference within a
 // subunit per row is recorded as rounding, anything larger means the rows
 // were misread and is refused.
-func (d *Document) reconcileTotals(env *gobl.Envelope, inv *bill.Invoice) error {
-	p := &parser{doc: d, det: d.InvoiceDetails, cur: inv.Currency}
-	stated, err := parseAmount(d.InvoiceDetails.TotalVatIncludedAmount.Value)
-	if err != nil {
-		return err
+func (p *parser) reconcileTotals(env *gobl.Envelope, inv *bill.Invoice) error {
+	if inv.Totals == nil {
+		if p.stated.IsZero() {
+			return nil
+		}
+		return fmt.Errorf("stated total %s does not match the rows, which add up to %s", p.stated, num.AmountZero)
 	}
-	if inv.Type.In(bill.InvoiceTypeCreditNote) && stated.IsNegative() {
-		stated = stated.Negate()
-	}
-	diff := stated.Subtract(inv.Totals.TotalWithTax)
+	diff := p.stated.Subtract(inv.Totals.TotalWithTax)
 	if diff.IsZero() {
 		return nil
 	}
 	if diff.Abs().Compare(p.reconcileTolerance(len(inv.Lines))) > 0 {
-		return fmt.Errorf("stated total %s does not match the rows, which add up to %s", stated, inv.Totals.TotalWithTax)
+		return fmt.Errorf("stated total %s does not match the rows, which add up to %s", p.stated, inv.Totals.TotalWithTax)
 	}
 	rounding := diff
 	if inv.Totals.Rounding != nil {

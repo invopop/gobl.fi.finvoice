@@ -16,7 +16,8 @@ const (
 	dateFormat  = "CCYYMMDD"
 	dateLayout  = "20060102"
 	decimalMark = ","
-	// minTextLength is the shortest text most Finvoice string elements take.
+	// minTextLength is the shortest text most Finvoice string elements take,
+	// which the addon enforces on the names it requires.
 	minTextLength = 2
 
 	// amountMinExp and amountMaxExp bound the decimals of a Finvoice amount:
@@ -155,6 +156,15 @@ func tooLong(s string, n int) bool {
 // Finvoice text elements require.
 func tooShort(s string) bool {
 	return s != "" && utf8.RuneCountInString(s) < minTextLength
+}
+
+// identifier returns s for the element named, refusing one longer than the n
+// characters it takes since a cut identifier points at nothing.
+func identifier(name, s string, n int) (string, error) {
+	if tooLong(s, n) {
+		return "", fmt.Errorf("%s %q is longer than the %d characters Finvoice allows", name, s, n)
+	}
+	return s, nil
 }
 
 // cut trims s to at most n characters, for the display texts Finvoice caps

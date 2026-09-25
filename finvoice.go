@@ -108,15 +108,31 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
+	seller, err := c.newSeller()
+	if err != nil {
+		return nil, err
+	}
+	buyer, err := c.newBuyer()
+	if err != nil {
+		return nil, err
+	}
+	delivery, err := c.newDeliveryParty()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := c.newRows()
+	if err != nil {
+		return nil, err
+	}
 
 	doc := &Document{
 		Version:        Version,
 		Transmission:   frame,
-		Seller:         c.newSeller(),
-		Buyer:          c.newBuyer(),
-		DeliveryParty:  c.newDeliveryParty(),
+		Seller:         seller,
+		Buyer:          buyer,
+		DeliveryParty:  delivery,
 		InvoiceDetails: details,
-		Rows:           c.newRows(),
+		Rows:           rows,
 		Epi:            epi,
 	}
 	c.applySellerDetails(doc)
