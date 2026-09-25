@@ -3,11 +3,11 @@
   <MessageTransmissionDetails>
     <MessageSenderDetails>
       <FromIdentifier SchemeID="0216">003723456780</FromIdentifier>
-      <FromIntermediator>003723327487</FromIntermediator>
+      <FromIntermediator>003700010001</FromIntermediator>
     </MessageSenderDetails>
     <MessageReceiverDetails>
       <ToIdentifier SchemeID="0216">003701120389</ToIdentifier>
-      <ToIntermediator>003723327487</ToIntermediator>
+      <ToIntermediator>003700020002</ToIntermediator>
     </MessageReceiverDetails>
     <MessageDetails>
       <MessageIdentifier>3a4b1f4e-7b1c-4a1a-9c2e-0d5f6a7b8c9d</MessageIdentifier>
@@ -57,7 +57,7 @@
     <BuyerEmailaddressIdentifier>ostot@ostaja.example</BuyerEmailaddressIdentifier>
   </BuyerCommunicationDetails>
   <InvoiceDetails>
-    <InvoiceTypeCode>INV01</InvoiceTypeCode>
+    <InvoiceTypeCode CodeListAgencyIdentifier="SPY">INV01</InvoiceTypeCode>
     <InvoiceTypeCodeUN>380</InvoiceTypeCodeUN>
     <InvoiceTypeText>INVOICE</InvoiceTypeText>
     <OriginCode>Original</OriginCode>
@@ -100,27 +100,25 @@
     <ArticleName>Konsultointi</ArticleName>
     <InvoicedQuantity QuantityUnitCode="h" QuantityUnitCodeUN="HUR">10</InvoicedQuantity>
     <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="h" QuantityUnitCodeUN="HUR">90,00</UnitPriceAmount>
+    <UnitPriceNetAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="h" QuantityUnitCodeUN="HUR">90,00</UnitPriceNetAmount>
     <RowPositionIdentifier>1</RowPositionIdentifier>
-    <RowDiscountPercent>10</RowDiscountPercent>
+    <RowDiscountPercent>10,0</RowDiscountPercent>
     <RowDiscountAmount AmountCurrencyIdentifier="EUR">90,00</RowDiscountAmount>
     <RowDiscountTypeText>Sopimusalennus</RowDiscountTypeText>
     <RowVatRatePercent>25,5</RowVatRatePercent>
     <RowVatCode>S</RowVatCode>
-    <RowVatAmount AmountCurrencyIdentifier="EUR">206,55</RowVatAmount>
     <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">810,00</RowVatExcludedAmount>
-    <RowAmount AmountCurrencyIdentifier="EUR">1016,55</RowAmount>
   </InvoiceRow>
   <InvoiceRow>
     <ArticleIdentifier>BK-100</ArticleIdentifier>
     <ArticleName>Käsikirja</ArticleName>
     <InvoicedQuantity QuantityUnitCode="item" QuantityUnitCodeUN="EA">2</InvoicedQuantity>
     <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="item" QuantityUnitCodeUN="EA">25,00</UnitPriceAmount>
+    <UnitPriceNetAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="item" QuantityUnitCodeUN="EA">25,00</UnitPriceNetAmount>
     <RowPositionIdentifier>2</RowPositionIdentifier>
     <RowVatRatePercent>13,5</RowVatRatePercent>
     <RowVatCode>S</RowVatCode>
-    <RowVatAmount AmountCurrencyIdentifier="EUR">6,75</RowVatAmount>
     <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">50,00</RowVatExcludedAmount>
-    <RowAmount AmountCurrencyIdentifier="EUR">56,75</RowAmount>
   </InvoiceRow>
   <EpiDetails>
     <EpiIdentificationDetails>
@@ -139,7 +137,7 @@
     <EpiPaymentInstructionDetails>
       <EpiRemittanceInfoIdentifier IdentificationSchemeName="ISO">RF18539007547034</EpiRemittanceInfoIdentifier>
       <EpiInstructedAmount AmountCurrencyIdentifier="EUR">1088,36</EpiInstructedAmount>
-      <EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+      <EpiCharge ChargeOption="SLEV">SLEV</EpiCharge>
       <EpiDateOptionDate Format="CCYYMMDD">20260915</EpiDateOptionDate>
       <EpiPaymentMeansCode>58</EpiPaymentMeansCode>
     </EpiPaymentInstructionDetails>

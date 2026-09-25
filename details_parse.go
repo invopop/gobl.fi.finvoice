@@ -1,10 +1,14 @@
 package fifinvoice
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/invopop/gobl/addons/eu/en16931"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
+	"github.com/invopop/gobl/catalogues/cef"
 	"github.com/invopop/gobl/catalogues/untdid"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
@@ -12,31 +16,62 @@ import (
 	"github.com/invopop/gobl/tax"
 )
 
-func (p *parser) preceding() []*org.DocumentRef {
+// vatCategoryKeys maps the UNTDID 5305 categories EN 16931 uses to GOBL tax
+// keys.
+var vatCategoryKeys = map[cbc.Code]cbc.Key{
+	en16931.TaxCategoryStandard:       tax.KeyStandard,
+	en16931.TaxCategoryZero:           tax.KeyZero,
+	en16931.TaxCategoryExempt:         tax.KeyExempt,
+	en16931.TaxCategoryReverseCharge:  tax.KeyReverseCharge,
+	en16931.TaxCategoryIntraCommunity: tax.KeyIntraCommunity,
+	en16931.TaxCategoryExport:         tax.KeyExport,
+	en16931.TaxCategoryOutsideScope:   tax.KeyOutsideScope,
+}
+
+func (p *parser) preceding() ([]*org.DocumentRef, error) {
 	det := p.det
 	var refs []*org.DocumentRef
 	if det.OriginalInvoiceNumber != "" {
-		ref := &org.DocumentRef{Code: cbc.Code(strings.TrimSpace(det.OriginalInvoiceNumber))}
-		ref.IssueDate, _ = parseDatePtr(det.OriginalInvoiceDate)
+		ref, err := documentRef(det.OriginalInvoiceNumber, det.OriginalInvoiceDate)
+		if err != nil {
+			return nil, fmt.Errorf("original invoice: %w", err)
+		}
 		refs = append(refs, ref)
 	}
 	for _, r := range det.OriginalInvoiceReference {
 		if r == nil || strings.TrimSpace(r.InvoiceNumber) == "" {
 			continue
 		}
-		ref := &org.DocumentRef{Code: cbc.Code(strings.TrimSpace(r.InvoiceNumber))}
-		ref.IssueDate, _ = parseDatePtr(r.InvoiceDate)
+		ref, err := documentRef(r.InvoiceNumber, r.InvoiceDate)
+		if err != nil {
+			return nil, fmt.Errorf("original invoice reference: %w", err)
+		}
 		refs = append(refs, ref)
 	}
-	return refs
+	return refs, nil
 }
 
-func (p *parser) ordering() *bill.Ordering {
+func documentRef(code string, date *Date) (*org.DocumentRef, error) {
+	ref := &org.DocumentRef{Code: cbc.Code(strings.TrimSpace(code))}
+	var err error
+	if ref.IssueDate, err = parseDatePtr(date); err != nil {
+		return nil, err
+	}
+	return ref, nil
+}
+
+func (p *parser) ordering() (*bill.Ordering, error) {
 	det := p.det
 	o := &bill.Ordering{Code: cbc.Code(strings.TrimSpace(det.BuyerReference))}
+	var err error
+	if o.Period, err = parsePeriod(det.PeriodStartDate, det.PeriodEndDate); err != nil {
+		return nil, fmt.Errorf("invoicing period: %w", err)
+	}
 	if det.OrderIdentifier != "" {
-		ref := &org.DocumentRef{Code: cbc.Code(strings.TrimSpace(det.OrderIdentifier))}
-		ref.IssueDate, _ = parseDatePtr(det.OrderDate)
+		ref, err := documentRef(det.OrderIdentifier, det.OrderDate)
+		if err != nil {
+			return nil, fmt.Errorf("order: %w", err)
+		}
 		o.Purchases = []*org.DocumentRef{ref}
 	}
 	if det.SellerReference != "" {
@@ -51,25 +86,27 @@ func (p *parser) ordering() *bill.Ordering {
 	if det.TenderReference != "" {
 		o.Tender = []*org.DocumentRef{{Code: cbc.Code(strings.TrimSpace(det.TenderReference))}}
 	}
-	if o.Code == "" && o.Purchases == nil && o.Sales == nil && o.Contracts == nil && o.Projects == nil && o.Tender == nil {
-		return nil
+	if o.Code == "" && o.Period == nil && o.Purchases == nil && o.Sales == nil && o.Contracts == nil && o.Projects == nil && o.Tender == nil {
+		return nil, nil
 	}
-	return o
+	return o, nil
 }
 
-func (p *parser) delivery() *bill.DeliveryDetails {
+func (p *parser) delivery() (*bill.DeliveryDetails, error) {
 	d := &bill.DeliveryDetails{}
-	if p.doc.DeliveryDetails != nil {
-		d.Date, _ = parseDatePtr(p.doc.DeliveryDetails.Date)
-		if per := p.doc.DeliveryDetails.Period; per != nil {
-			d.Period = parsePeriod(per.StartDate, per.EndDate)
+	if dd := p.doc.DeliveryDetails; dd != nil {
+		var err error
+		if d.Date, err = parseDatePtr(dd.Date); err != nil {
+			return nil, fmt.Errorf("delivery: %w", err)
+		}
+		if per := dd.Period; per != nil {
+			if d.Period, err = parsePeriod(per.StartDate, per.EndDate); err != nil {
+				return nil, fmt.Errorf("delivery period: %w", err)
+			}
 		}
 	}
-	if d.Period == nil {
-		d.Period = parsePeriod(p.det.PeriodStartDate, p.det.PeriodEndDate)
-	}
-	if dp := p.doc.DeliveryParty; dp != nil && dp.Name != "" {
-		receiver := &org.Party{Name: strings.TrimSpace(dp.Name)}
+	if dp := p.doc.DeliveryParty; dp != nil && joinNames(dp.Name) != "" {
+		receiver := &org.Party{Name: joinNames(dp.Name)}
 		if dp.Address != nil {
 			receiver.Addresses = []*org.Address{parseAddress(dp.Address.StreetName, dp.Address.TownName,
 				dp.Address.PostCode, dp.Address.Subdivision, dp.Address.CountryCode, dp.Address.PostOfficeBox)}
@@ -78,21 +115,24 @@ func (p *parser) delivery() *bill.DeliveryDetails {
 		d.Receiver = receiver
 	}
 	if d.Date == nil && d.Period == nil && d.Receiver == nil {
-		return nil
+		return nil, nil
 	}
-	return d
+	return d, nil
 }
 
-func parsePeriod(start, end *Date) *cal.Period {
+func parsePeriod(start, end *Date) (*cal.Period, error) {
 	s, err := parseDatePtr(start)
-	if err != nil || s == nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
 	e, err := parseDatePtr(end)
-	if err != nil || e == nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
-	return &cal.Period{Start: s, End: e}
+	if s == nil || e == nil {
+		return nil, nil
+	}
+	return &cal.Period{Start: s, End: e}, nil
 }
 
 func (p *parser) discounts() ([]*bill.Discount, error) {
@@ -119,9 +159,11 @@ func (p *parser) discounts() ([]*bill.Discount, error) {
 		if d.ReasonCode != "" {
 			dis.Ext = dis.Ext.Set(untdid.ExtKeyAllowance, cbc.Code(strings.TrimSpace(d.ReasonCode)))
 		}
-		if combo, err := p.vatCombo(d.VatCategoryCode, d.VatRatePercent); err != nil {
-			return nil, err
-		} else if combo != nil {
+		combo, err := p.vatCombo(d.VatCategoryCode, d.VatRatePercent)
+		if err != nil {
+			return nil, fmt.Errorf("discount %q: %w", dis.Reason, err)
+		}
+		if combo != nil {
 			dis.Taxes = tax.Set{combo}
 		}
 		out = append(out, dis)
@@ -153,9 +195,11 @@ func (p *parser) charges() ([]*bill.Charge, error) {
 		if c.ReasonCode != "" {
 			ch.Ext = ch.Ext.Set(untdid.ExtKeyCharge, cbc.Code(strings.TrimSpace(c.ReasonCode)))
 		}
-		if combo, err := p.vatCombo(c.VatCategoryCode, c.VatRatePercent); err != nil {
-			return nil, err
-		} else if combo != nil {
+		combo, err := p.vatCombo(c.VatCategoryCode, c.VatRatePercent)
+		if err != nil {
+			return nil, fmt.Errorf("charge %q: %w", ch.Reason, err)
+		}
+		if combo != nil {
 			ch.Taxes = tax.Set{combo}
 		}
 		out = append(out, ch)
@@ -164,9 +208,9 @@ func (p *parser) charges() ([]*bill.Charge, error) {
 }
 
 // vatCombo builds the VAT tax for a row, discount or charge from its
-// category code and rate. Without a code, the rate decides: a positive one is
-// standard-rated, zero is zero-rated, unless the VAT breakdown names the
-// category for that rate.
+// category code and rate. Without a code the VAT breakdown names the
+// category for that rate, and failing that a positive rate is standard-rated
+// and zero is zero-rated.
 func (p *parser) vatCombo(code, percent string) (*tax.Combo, error) {
 	pct, err := p.percent(percent)
 	if err != nil {
@@ -177,14 +221,18 @@ func (p *parser) vatCombo(code, percent string) (*tax.Combo, error) {
 		if pct == nil {
 			return nil, nil
 		}
-		code = p.categoryForRate(*pct)
+		if code, err = p.categoryForRate(*pct); err != nil {
+			return nil, err
+		}
 	}
 	combo := &tax.Combo{Category: tax.CategoryVAT}
 	key, known := vatCategoryKeys[cbc.Code(code)]
 	switch {
 	case known:
 		combo.Key = key
-	case pct == nil || pct.IsZero():
+	case code != "":
+		return nil, fmt.Errorf("unknown VAT category code %q", code)
+	case pct.IsZero():
 		combo.Key = tax.KeyZero
 	default:
 		combo.Key = tax.KeyStandard
@@ -196,27 +244,36 @@ func (p *parser) vatCombo(code, percent string) (*tax.Combo, error) {
 		combo.Percent = pct
 	}
 	if vatex := p.exemptionCode(code); vatex != "" {
-		combo.Ext = combo.Ext.Set(untdidVATEX, cbc.Code(vatex))
+		combo.Ext = combo.Ext.Set(cef.ExtKeyVATEX, cbc.Code(vatex))
 	}
 	return combo, nil
 }
 
 // categoryForRate finds the category the VAT breakdown gives for a rate,
-// for rows that carry the rate alone.
-func (p *parser) categoryForRate(pct num.Percentage) string {
+// for rows that carry the rate alone. Two categories at one rate cannot be
+// told apart, so that document is refused rather than guessed.
+func (p *parser) categoryForRate(pct num.Percentage) (string, error) {
+	var found []string
 	for _, spec := range p.det.VatSpecifications {
-		if spec == nil || spec.Code == "" {
+		if spec == nil || strings.TrimSpace(spec.Code) == "" {
 			continue
 		}
 		sp, err := p.percent(spec.RatePercent)
-		if err != nil || sp == nil {
+		if err != nil || sp == nil || !sp.Equals(pct) {
 			continue
 		}
-		if sp.Equals(pct) {
-			return strings.TrimSpace(spec.Code)
+		code := strings.TrimSpace(spec.Code)
+		if !slices.Contains(found, code) {
+			found = append(found, code)
 		}
 	}
-	return ""
+	switch len(found) {
+	case 0:
+		return "", nil
+	case 1:
+		return found[0], nil
+	}
+	return "", fmt.Errorf("rows at %s carry no VAT code and the breakdown lists %s at that rate", pct, strings.Join(found, " and "))
 }
 
 // exemptionCode finds the VATEX reason the breakdown gives for a category.
@@ -229,24 +286,49 @@ func (p *parser) exemptionCode(code string) string {
 	return ""
 }
 
-// taxNotes keeps the exemption reasons the breakdown gives in words.
-func (p *parser) taxNotes() []*tax.Note {
+// taxNotes keeps the exemption reasons given in words: in the breakdown, or
+// failing that on the rows of that category, which the guidelines allow.
+func (p *parser) taxNotes(lines []*bill.Line) []*tax.Note {
 	var notes []*tax.Note
 	for _, spec := range p.det.VatSpecifications {
-		if spec == nil || len(spec.FreeText) == 0 {
+		if spec == nil {
 			continue
 		}
-		key, ok := vatCategoryKeys[cbc.Code(strings.TrimSpace(spec.Code))]
-		if !ok || key == tax.KeyStandard || key == tax.KeyZero {
+		code := cbc.Code(strings.TrimSpace(spec.Code))
+		key, ok := vatCategoryKeys[code]
+		if !ok || key.In(tax.KeyStandard, tax.KeyZero) {
+			continue
+		}
+		text := strings.TrimSpace(strings.Join(spec.FreeText, " "))
+		if text == "" && spec.ExemptionReasonCode == "" {
+			text = rowText(lines, key)
+		}
+		if text == "" {
 			continue
 		}
 		notes = append(notes, &tax.Note{
 			Category: tax.CategoryVAT,
 			Key:      key,
-			Text:     strings.TrimSpace(strings.Join(spec.FreeText, " ")),
+			Text:     text,
 		})
 	}
 	return notes
+}
+
+// rowText is the first note on a line taxed with the given key.
+func rowText(lines []*bill.Line, key cbc.Key) string {
+	for _, line := range lines {
+		vat := vatCombo(line.Taxes)
+		if vat == nil || vat.Key != key {
+			continue
+		}
+		for _, n := range line.Notes {
+			if n != nil && n.Text != "" {
+				return n.Text
+			}
+		}
+	}
+	return ""
 }
 
 func (p *parser) notes() []*org.Note {

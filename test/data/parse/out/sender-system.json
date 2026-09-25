@@ -6,7 +6,7 @@
 	],
 	"uuid": "00000000-0000-0000-0000-000000000000",
 	"type": "standard",
-	"code": "560",
+	"code": "1042",
 	"issue_date": "2026-09-22",
 	"currency": "EUR",
 	"tax": {
@@ -28,9 +28,9 @@
 		],
 		"addresses": [
 			{
-				"street": "Tykistökatu 4 B",
-				"locality": "Turku",
-				"code": "20520",
+				"street": "Esimerkkikatu 1",
+				"locality": "Helsinki",
+				"code": "00100",
 				"country": "FI"
 			}
 		],
@@ -74,7 +74,7 @@
 			"quantity": "1.00",
 			"item": {
 				"ref": "11",
-				"name": "Expenses, group",
+				"name": "Kulut",
 				"price": "1.00",
 				"unit": "h"
 			},
@@ -92,7 +92,7 @@
 			"total": "1.00",
 			"notes": [
 				{
-					"text": "Reinvoiced expenses"
+					"text": "Laskutettavat kulut"
 				}
 			]
 		}
@@ -110,7 +110,7 @@
 		},
 		"instructions": {
 			"key": "credit-transfer",
-			"ref": "5605604",
+			"ref": "1042005",
 			"credit_transfer": [
 				{
 					"iban": "FI2112345600000785",

@@ -78,7 +78,7 @@
 			}
 		],
 		"ext": {
-			"fi-finvoice-operator": "003723327487"
+			"fi-finvoice-operator": "003700020002"
 		}
 	},
 	"lines": [
@@ -110,7 +110,7 @@
 			"item": {
 				"name": "Hoitokäynti",
 				"price": "200.00",
-				"unit": "one"
+				"unit": "piece"
 			},
 			"sum": "200.00",
 			"taxes": [

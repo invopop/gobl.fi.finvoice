@@ -14,7 +14,7 @@
 <eb:Role>Receiver</eb:Role>
 </eb:To>
 <eb:To>
-<eb:PartyId>003723327487</eb:PartyId>
+<eb:PartyId>003700020002</eb:PartyId>
 <eb:Role>Intermediator</eb:Role>
 </eb:To>
 <eb:CPAId>yoursandmycpa</eb:CPAId>
@@ -46,7 +46,7 @@
 </MessageSenderDetails>
 <MessageReceiverDetails>
 <ToIdentifier>003701120389</ToIdentifier>
-<ToIntermediator>003723327487</ToIntermediator>
+<ToIntermediator>003700020002</ToIntermediator>
 </MessageReceiverDetails>
 <MessageDetails>
 <MessageIdentifier>MSG-2026-77</MessageIdentifier>

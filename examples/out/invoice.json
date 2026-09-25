@@ -4,7 +4,7 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "ccb175ad9ac2d598fafb421edf268cfe0145f3e5f819c4b784b34bf8a42dc2ec"
+			"val": "551fc8eff3cd9e47729337d7d6470da9ebfa143f376fd8bce3504c43a38e1d79"
 		},
 		"from": "iso6523-actorid-upis::0216:003723456780",
 		"to": "iso6523-actorid-upis::0216:003701120389"
@@ -104,7 +104,7 @@
 				}
 			],
 			"ext": {
-				"fi-finvoice-operator": "003723327487"
+				"fi-finvoice-operator": "003700020002"
 			}
 		},
 		"lines": [

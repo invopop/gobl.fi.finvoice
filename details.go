@@ -1,6 +1,9 @@
 package fifinvoice
 
 import (
+	"fmt"
+
+	"github.com/invopop/gobl/addons/eu/en16931"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/catalogues/cef"
 	"github.com/invopop/gobl/catalogues/untdid"
@@ -10,27 +13,29 @@ import (
 	"github.com/invopop/gobl/tax"
 )
 
-// Finvoice invoice type codes (SPY code list, guidelines §10.5).
+// Finvoice invoice type codes from the SPY code list (guidelines §10.5) and
+// their English texts.
 const (
-	TypeCodeInvoice     = "INV01"
-	TypeCodeCreditNote  = "INV02"
-	TypeCodeProforma    = "INV06"
-	TypeCodeSelfBilling = "INV07"
+	typeCodeInvoice     = "INV01"
+	typeCodeCreditNote  = "INV02"
+	typeCodeProforma    = "INV06"
+	typeCodeSelfBilling = "INV07"
 
-	TypeTextInvoice     = "INVOICE"
-	TypeTextCreditNote  = "CREDIT NOTE"
-	TypeTextProforma    = "PRO FORMA INVOICE"
-	TypeTextSelfBilling = "SELFBILLING"
+	typeTextInvoice     = "INVOICE"
+	typeTextCreditNote  = "CREDIT NOTE"
+	typeTextProforma    = "PRO FORMA INVOICE"
+	typeTextSelfBilling = "SELFBILLING"
 
-	OriginOriginal = "Original"
+	typeCodeList = "SPY"
+
+	originOriginal = "Original"
+	originCopy     = "Copy"
 )
 
 const (
-	untdidTaxCategory = untdid.ExtKeyTaxCategory
-	untdidVATEX       = cef.ExtKeyVATEX
-
-	// freeTextMaxLength bounds InvoiceFreeText.
+	// freeTextMaxLength bounds each free text element, which may repeat.
 	freeTextMaxLength = 512
+	freeTextLines     = 10
 	// termsTextMaxLength bounds each PaymentTermsFreeText, of which there
 	// may be two.
 	termsTextMaxLength = 70
@@ -40,7 +45,8 @@ const (
 	vatFreeTextLines     = 3
 	// referenceMaxLength bounds the order, agreement and buyer references.
 	referenceMaxLength = 70
-	// invoiceNumberMaxLength bounds InvoiceNumber.
+	// invoiceNumberMaxLength bounds InvoiceNumber and the original invoice
+	// numbers; an identifier is never cut, so a longer one is refused.
 	invoiceNumberMaxLength = 20
 )
 
@@ -48,10 +54,10 @@ const (
 // references, totals, VAT breakdown, terms, and document-level discounts and
 // charges.
 type InvoiceDetails struct {
-	TypeCode   string `xml:"InvoiceTypeCode"`
-	TypeCodeUN string `xml:"InvoiceTypeCodeUN,omitempty"`
-	TypeText   string `xml:"InvoiceTypeText"`
-	OriginCode string `xml:"OriginCode"`
+	TypeCode   TypeCode `xml:"InvoiceTypeCode"`
+	TypeCodeUN string   `xml:"InvoiceTypeCodeUN,omitempty"`
+	TypeText   string   `xml:"InvoiceTypeText"`
+	OriginCode string   `xml:"OriginCode"`
 
 	InvoiceNumber            string                      `xml:"InvoiceNumber"`
 	InvoiceDate              *Date                       `xml:"InvoiceDate"`
@@ -61,12 +67,12 @@ type InvoiceDetails struct {
 	PeriodStartDate          *Date                       `xml:"InvoicingPeriodStartDate,omitempty"`
 	PeriodEndDate            *Date                       `xml:"InvoicingPeriodEndDate,omitempty"`
 
-	SellerReference    string `xml:"SellerReferenceIdentifier,omitempty"`
-	OrderIdentifier    string `xml:"OrderIdentifier,omitempty"`
-	OrderDate          *Date  `xml:"OrderDate,omitempty"`
+	SellerReference     string `xml:"SellerReferenceIdentifier,omitempty"`
+	OrderIdentifier     string `xml:"OrderIdentifier,omitempty"`
+	OrderDate           *Date  `xml:"OrderDate,omitempty"`
 	AgreementIdentifier string `xml:"AgreementIdentifier,omitempty"`
-	BuyerReference     string `xml:"BuyerReferenceIdentifier,omitempty"`
-	ProjectReference   string `xml:"ProjectReferenceIdentifier,omitempty"`
+	BuyerReference      string `xml:"BuyerReferenceIdentifier,omitempty"`
+	ProjectReference    string `xml:"ProjectReferenceIdentifier,omitempty"`
 
 	RowsTotalVatExcludedAmount      *Amount `xml:"RowsTotalVatExcludedAmount,omitempty"`
 	DiscountsTotalVatExcludedAmount *Amount `xml:"DiscountsTotalVatExcludedAmount,omitempty"`
@@ -83,6 +89,12 @@ type InvoiceDetails struct {
 	Discounts         []*DiscountDetails         `xml:"DiscountDetails,omitempty"`
 	Charges           []*ChargeDetails           `xml:"ChargeDetails,omitempty"`
 	TenderReference   string                     `xml:"TenderReference,omitempty"`
+}
+
+// TypeCode is the Finvoice invoice type code with its code list.
+type TypeCode struct {
+	Value    string `xml:",chardata"`
+	CodeList string `xml:"CodeListAgencyIdentifier,attr,omitempty"`
 }
 
 // OriginalInvoiceReference points at a further preceding document.
@@ -129,78 +141,92 @@ type ChargeDetails struct {
 	VatRatePercent  string  `xml:"VatRatePercent,omitempty"`
 }
 
-func (c *converter) newInvoiceDetails() *InvoiceDetails {
+func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
 	inv := c.inv
+	number, err := invoiceNumber(inv.Series, inv.Code)
+	if err != nil {
+		return nil, err
+	}
 	code, text := invoiceType(inv)
 	d := &InvoiceDetails{
-		TypeCode:      code,
+		TypeCode:      TypeCode{Value: code, CodeList: typeCodeList},
+		TypeCodeUN:    inv.Tax.Ext.Get(untdid.ExtKeyDocumentType).String(),
 		TypeText:      text,
-		OriginCode:    OriginOriginal,
-		InvoiceNumber: cut(invoiceNumber(inv), invoiceNumberMaxLength),
+		OriginCode:    originOriginal,
+		InvoiceNumber: number,
 		InvoiceDate:   newDate(inv.IssueDate),
 	}
-	if inv.Tax != nil {
-		d.TypeCodeUN = inv.Tax.Ext.Get(untdid.ExtKeyDocumentType).String()
+	if err := c.applyPreceding(d); err != nil {
+		return nil, err
 	}
-	c.applyPreceding(d)
 	c.applyOrdering(d)
 	c.applyTotals(d)
 	d.VatSpecifications = c.newVatSpecifications()
 	for _, n := range inv.Notes {
-		if n != nil && n.Text != "" {
-			d.FreeText = append(d.FreeText, cut(n.Text, freeTextMaxLength))
+		if n != nil {
+			d.FreeText = append(d.FreeText, split(n.Text, freeTextMaxLength, freeTextLines)...)
 		}
 	}
 	d.PaymentTerms = c.newPaymentTerms()
 	d.Discounts = c.newDiscounts()
 	d.Charges = c.newCharges()
-	return d
+	return d, nil
+}
+
+// invoiceNumber joins the series and code into the document's one number,
+// refusing one too long for the element rather than cutting an identifier.
+func invoiceNumber(series, code cbc.Code) (string, error) {
+	number := series.Join(code).String()
+	if tooLong(number, invoiceNumberMaxLength) {
+		return "", fmt.Errorf("invoice number %q is longer than the %d characters Finvoice allows", number, invoiceNumberMaxLength)
+	}
+	return number, nil
 }
 
 // invoiceType maps the GOBL type to the Finvoice code and its English text.
 func invoiceType(inv *bill.Invoice) (code, text string) {
 	switch {
 	case inv.Type.In(bill.InvoiceTypeCreditNote):
-		return TypeCodeCreditNote, TypeTextCreditNote
+		return typeCodeCreditNote, typeTextCreditNote
 	case inv.Type.In(bill.InvoiceTypeProforma):
-		return TypeCodeProforma, TypeTextProforma
+		return typeCodeProforma, typeTextProforma
 	case inv.HasTags(tax.TagSelfBilled):
-		return TypeCodeSelfBilling, TypeTextSelfBilling
+		return typeCodeSelfBilling, typeTextSelfBilling
 	default:
-		return TypeCodeInvoice, TypeTextInvoice
+		return typeCodeInvoice, typeTextInvoice
 	}
 }
 
-func (c *converter) applyPreceding(d *InvoiceDetails) {
+func (c *converter) applyPreceding(d *InvoiceDetails) error {
 	for i, ref := range c.inv.Preceding {
 		if ref == nil {
 			continue
 		}
-		number := cut(ref.Series.Join(ref.Code).String(), invoiceNumberMaxLength)
-		var date *Date
-		if ref.IssueDate != nil {
-			date = newDate(*ref.IssueDate)
+		number, err := invoiceNumber(ref.Series, ref.Code)
+		if err != nil {
+			return fmt.Errorf("preceding document: %w", err)
 		}
 		if i == 0 {
 			d.OriginalInvoiceNumber = number
-			d.OriginalInvoiceDate = date
+			d.OriginalInvoiceDate = newDatePtr(ref.IssueDate)
 			continue
 		}
 		d.OriginalInvoiceReference = append(d.OriginalInvoiceReference, &OriginalInvoiceReference{
 			InvoiceNumber: number,
-			InvoiceDate:   date,
+			InvoiceDate:   newDatePtr(ref.IssueDate),
 		})
 	}
+	return nil
 }
 
 func (c *converter) applyOrdering(d *InvoiceDetails) {
-	if del := c.inv.Delivery; del != nil && del.Period != nil {
-		d.PeriodStartDate = newDatePtr(del.Period.Start)
-		d.PeriodEndDate = newDatePtr(del.Period.End)
-	}
 	o := c.inv.Ordering
 	if o == nil {
 		return
+	}
+	if o.Period != nil {
+		d.PeriodStartDate = newDatePtr(o.Period.Start)
+		d.PeriodEndDate = newDatePtr(o.Period.End)
 	}
 	d.BuyerReference = cut(o.Code.String(), referenceMaxLength)
 	if ref := firstDocumentRef(o.Sales); ref != nil {
@@ -208,9 +234,7 @@ func (c *converter) applyOrdering(d *InvoiceDetails) {
 	}
 	if ref := firstDocumentRef(o.Purchases); ref != nil {
 		d.OrderIdentifier = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
-		if ref.IssueDate != nil {
-			d.OrderDate = newDate(*ref.IssueDate)
-		}
+		d.OrderDate = newDatePtr(ref.IssueDate)
 	}
 	if ref := firstDocumentRef(o.Contracts); ref != nil {
 		d.AgreementIdentifier = cut(ref.Series.Join(ref.Code).String(), referenceMaxLength)
@@ -234,9 +258,6 @@ func firstDocumentRef(refs []*org.DocumentRef) *org.DocumentRef {
 
 func (c *converter) applyTotals(d *InvoiceDetails) {
 	t := c.inv.Totals
-	if t == nil {
-		return
-	}
 	d.RowsTotalVatExcludedAmount = c.amount(t.Sum)
 	if t.Discount != nil {
 		d.DiscountsTotalVatExcludedAmount = c.amount(*t.Discount)
@@ -258,7 +279,7 @@ func (c *converter) applyTotals(d *InvoiceDetails) {
 // newVatSpecifications writes one breakdown line per VAT rate total.
 func (c *converter) newVatSpecifications() []*VatSpecificationDetails {
 	t := c.inv.Totals
-	if t == nil || t.Taxes == nil {
+	if t.Taxes == nil {
 		return nil
 	}
 	cat := t.Taxes.Category(tax.CategoryVAT)
@@ -272,15 +293,13 @@ func (c *converter) newVatSpecifications() []*VatSpecificationDetails {
 		}
 		spec := &VatSpecificationDetails{
 			BaseAmount:          c.amount(rate.Base),
+			RatePercent:         vatRatePercent(rate.Ext, rate.Percent),
 			Code:                vatCategory(rate.Ext),
 			RateAmount:          c.amount(rate.Amount),
-			ExemptionReasonCode: rate.Ext.Get(untdidVATEX).String(),
-		}
-		if rate.Percent != nil {
-			spec.RatePercent = formatPercent(*rate.Percent)
+			ExemptionReasonCode: rate.Ext.Get(cef.ExtKeyVATEX).String(),
 		}
 		if note := c.vatNote(spec.Code); note != "" {
-			spec.FreeText = chunks(note, vatFreeTextMaxLength, vatFreeTextLines)
+			spec.FreeText = split(note, vatFreeTextMaxLength, vatFreeTextLines)
 		}
 		out = append(out, spec)
 	}
@@ -289,7 +308,7 @@ func (c *converter) newVatSpecifications() []*VatSpecificationDetails {
 
 // vatNote is the exemption reason recorded for a VAT category, if any.
 func (c *converter) vatNote(category string) string {
-	if c.inv.Tax == nil || category == "" {
+	if category == "" {
 		return ""
 	}
 	for _, n := range c.inv.Tax.Notes {
@@ -301,20 +320,12 @@ func (c *converter) vatNote(category string) string {
 }
 
 func (c *converter) newPaymentTerms() []*PaymentTermsDetails {
-	p := c.inv.Payment
-	if p == nil || p.Terms == nil {
-		return nil
+	terms := c.inv.Payment.Terms
+	out := &PaymentTermsDetails{
+		FreeText: split(terms.Notes, termsTextMaxLength, termsTextLines),
+		DueDate:  newDatePtr(firstDueDate(terms)),
 	}
-	terms := &PaymentTermsDetails{
-		FreeText: chunks(p.Terms.Notes, termsTextMaxLength, termsTextLines),
-	}
-	if due := firstDueDate(p.Terms); due != nil {
-		terms.DueDate = newDate(*due)
-	}
-	if len(terms.FreeText) == 0 && terms.DueDate == nil {
-		return nil
-	}
-	return []*PaymentTermsDetails{terms}
+	return []*PaymentTermsDetails{out}
 }
 
 func (c *converter) newDiscounts() []*DiscountDetails {
@@ -369,10 +380,36 @@ func vatCategoryAndRate(set tax.Set) (code, percent string) {
 	if vat == nil {
 		return "", ""
 	}
-	if vat.Percent != nil {
-		percent = formatPercent(*vat.Percent)
+	return vatCategory(vat.Ext), vatRatePercent(vat.Ext, vat.Percent)
+}
+
+// vatCategory reads the UNTDID 5305 category the EN 16931 addon records on
+// a tax combo or rate total.
+func vatCategory(ext tax.Extensions) string {
+	return ext.Get(untdid.ExtKeyTaxCategory).String()
+}
+
+// vatRatePercent writes the rate, which EN 16931 expects as zero on the
+// exempt, reverse charge, intra-community and export categories (BR-E-05,
+// BR-AE-05, BR-IC-05, BR-G-05) and absent only for out of scope.
+func vatRatePercent(ext tax.Extensions, percent *num.Percentage) string {
+	if percent != nil {
+		return formatPercent(*percent)
 	}
-	return vatCategory(vat.Ext), percent
+	switch ext.Get(untdid.ExtKeyTaxCategory) {
+	case en16931.TaxCategoryExempt, en16931.TaxCategoryReverseCharge,
+		en16931.TaxCategoryIntraCommunity, en16931.TaxCategoryExport:
+		return formatPercent(num.MakePercentage(0, 0))
+	}
+	return ""
+}
+
+// vatCombo is the VAT tax on a line, charge or discount, if any.
+func vatCombo(set tax.Set) *tax.Combo {
+	if set == nil {
+		return nil
+	}
+	return set.Get(tax.CategoryVAT)
 }
 
 // amount writes a monetary amount in the document currency, negated on a
@@ -386,16 +423,4 @@ func (c *converter) signed(a num.Amount) num.Amount {
 		return a.Negate()
 	}
 	return a
-}
-
-// vatCategoryKeys maps the UNTDID 5305 codes EN 16931 uses to GOBL tax keys,
-// for reading a Finvoice back.
-var vatCategoryKeys = map[cbc.Code]cbc.Key{
-	"S":  tax.KeyStandard,
-	"Z":  tax.KeyZero,
-	"E":  tax.KeyExempt,
-	"AE": tax.KeyReverseCharge,
-	"K":  tax.KeyIntraCommunity,
-	"G":  tax.KeyExport,
-	"O":  tax.KeyOutsideScope,
 }

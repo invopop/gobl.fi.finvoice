@@ -33,16 +33,21 @@ customer:
   identities:
     - scope: "legal"
       code: "HRB 12345"
+  endpoints:
+    - uri: "iso6523-actorid-upis::9930:DE111111125"
+  ext:
+    fi-finvoice-operator: "NDEAFIHH"
   addresses:
     - street: "Musterstraße 5"
       locality: "Berlin"
       code: "10115"
       country: "DE"
-delivery:
-  date: "2026-09-05"
+ordering:
   period:
     start: "2026-08-01"
     end: "2026-08-31"
+delivery:
+  date: "2026-09-05"
   receiver:
     name: "Beispiel Lager"
     addresses:

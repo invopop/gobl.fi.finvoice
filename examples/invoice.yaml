@@ -38,7 +38,7 @@ customer:
   endpoints:
     - uri: "iso6523-actorid-upis::0216:003701120389"
   ext:
-    fi-finvoice-operator: "003723327487"
+    fi-finvoice-operator: "003700020002"
   people:
     - name:
         given: "Olli"

@@ -4,9 +4,10 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "8e09de1e750e6304e97398106420d96fe9fe3eac79881359776828a6dbaa2a46"
+			"val": "32e5e6ba88aed4f30f8e91c9a0bd30caf0bc636d2d71ccc119b8dc4675836093"
 		},
-		"from": "iso6523-actorid-upis::0216:003723456780"
+		"from": "iso6523-actorid-upis::0216:003723456780",
+		"to": "iso6523-actorid-upis::9930:DE111111125"
 	},
 	"doc": {
 		"$schema": "https://gobl.org/draft-0/bill/invoice",
@@ -68,6 +69,11 @@
 					"code": "HRB 12345"
 				}
 			],
+			"endpoints": [
+				{
+					"uri": "iso6523-actorid-upis::9930:DE111111125"
+				}
+			],
 			"addresses": [
 				{
 					"street": "Musterstraße 5",
@@ -75,7 +81,10 @@
 					"code": "10115",
 					"country": "DE"
 				}
-			]
+			],
+			"ext": {
+				"fi-finvoice-operator": "NDEAFIHH"
+			}
 		},
 		"lines": [
 			{
@@ -147,6 +156,12 @@
 				]
 			}
 		],
+		"ordering": {
+			"period": {
+				"start": "2026-08-01",
+				"end": "2026-08-31"
+			}
+		},
 		"payment": {
 			"terms": {
 				"due_dates": [
@@ -188,11 +203,7 @@
 					}
 				]
 			},
-			"date": "2026-09-05",
-			"period": {
-				"start": "2026-08-01",
-				"end": "2026-08-31"
-			}
+			"date": "2026-09-05"
 		},
 		"totals": {
 			"sum": "575.00",

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Finvoice Version="3.0">
+  <MessageTransmissionDetails>
+    <MessageSenderDetails>
+      <FromIdentifier SchemeID="0216">003723456780</FromIdentifier>
+      <FromIntermediator>003700010001</FromIntermediator>
+    </MessageSenderDetails>
+    <MessageReceiverDetails>
+      <ToIdentifier SchemeID="9930">DE111111125</ToIdentifier>
+      <ToIntermediator>NDEAFIHH</ToIntermediator>
+    </MessageReceiverDetails>
+    <MessageDetails>
+      <MessageIdentifier>c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f</MessageIdentifier>
+      <MessageTimeStamp>2026-09-01T08:30:00Z</MessageTimeStamp>
+      <SpecificationIdentifier>EN16931</SpecificationIdentifier>
+    </MessageDetails>
+  </MessageTransmissionDetails>
   <SellerPartyDetails>
     <SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
     <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
@@ -23,6 +38,7 @@
       <CountryCode>DE</CountryCode>
     </BuyerPostalAddressDetails>
   </BuyerPartyDetails>
+  <BuyerOrganisationUnitNumber>DE111111125</BuyerOrganisationUnitNumber>
   <DeliveryPartyDetails>
     <DeliveryOrganisationName>Beispiel Lager</DeliveryOrganisationName>
     <DeliveryPostalAddressDetails>
@@ -36,7 +52,7 @@
     <DeliveryDate Format="CCYYMMDD">20260905</DeliveryDate>
   </DeliveryDetails>
   <InvoiceDetails>
-    <InvoiceTypeCode>INV01</InvoiceTypeCode>
+    <InvoiceTypeCode CodeListAgencyIdentifier="SPY">INV01</InvoiceTypeCode>
     <InvoiceTypeCodeUN>380</InvoiceTypeCodeUN>
     <InvoiceTypeText>INVOICE</InvoiceTypeText>
     <OriginCode>Original</OriginCode>
@@ -52,6 +68,7 @@
     <InvoicePaidAmount AmountCurrencyIdentifier="EUR">100,00</InvoicePaidAmount>
     <VatSpecificationDetails>
       <VatBaseAmount AmountCurrencyIdentifier="EUR">563,50</VatBaseAmount>
+      <VatRatePercent>0,0</VatRatePercent>
       <VatCode>AE</VatCode>
       <VatRateAmount AmountCurrencyIdentifier="EUR">0,00</VatRateAmount>
       <VatFreeText>Käännetty verovelvollisuus, AVL 8 c §</VatFreeText>
@@ -61,9 +78,10 @@
     </PaymentTermsDetails>
     <DiscountDetails>
       <FreeText>Varhaismaksu</FreeText>
-      <Percent>2</Percent>
+      <Percent>2,0</Percent>
       <Amount AmountCurrencyIdentifier="EUR">11,50</Amount>
       <VatCategoryCode>AE</VatCategoryCode>
+      <VatRatePercent>0,0</VatRatePercent>
     </DiscountDetails>
   </InvoiceDetails>
   <InvoiceRow>
@@ -71,9 +89,10 @@
     <EanCode>6410000000012</EanCode>
     <InvoicedQuantity QuantityUnitCode="one" QuantityUnitCodeUN="C62">3</InvoicedQuantity>
     <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="one" QuantityUnitCodeUN="C62">200,00</UnitPriceAmount>
+    <UnitPriceNetAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="one" QuantityUnitCodeUN="C62">200,00</UnitPriceNetAmount>
     <RowPositionIdentifier>1</RowPositionIdentifier>
     <RowFreeText>Asennus asiakkaan tiloissa</RowFreeText>
-    <RowDiscountPercent>5</RowDiscountPercent>
+    <RowDiscountPercent>5,0</RowDiscountPercent>
     <RowDiscountAmount AmountCurrencyIdentifier="EUR">30,00</RowDiscountAmount>
     <RowDiscountTypeText>Määräalennus</RowDiscountTypeText>
     <RowProgressiveDiscountDetails>
@@ -84,10 +103,9 @@
       <ReasonText>Matkakulut</ReasonText>
       <Amount AmountCurrencyIdentifier="EUR">15,00</Amount>
     </RowChargeDetails>
+    <RowVatRatePercent>0,0</RowVatRatePercent>
     <RowVatCode>AE</RowVatCode>
-    <RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
     <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">575,00</RowVatExcludedAmount>
-    <RowAmount AmountCurrencyIdentifier="EUR">575,00</RowAmount>
   </InvoiceRow>
   <EpiDetails>
     <EpiIdentificationDetails>

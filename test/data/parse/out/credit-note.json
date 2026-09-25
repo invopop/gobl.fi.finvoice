@@ -6,13 +6,13 @@
 	],
 	"uuid": "00000000-0000-0000-0000-000000000000",
 	"type": "credit-note",
-	"code": "561",
+	"code": "1043",
 	"issue_date": "2026-09-25",
 	"currency": "EUR",
 	"preceding": [
 		{
 			"issue_date": "2026-09-22",
-			"code": "560"
+			"code": "1042"
 		}
 	],
 	"tax": {
@@ -68,7 +68,7 @@
 			"item": {
 				"name": "Palautus",
 				"price": "50.00",
-				"unit": "one"
+				"unit": "piece"
 			},
 			"sum": "100.00",
 			"taxes": [
@@ -96,7 +96,7 @@
 		},
 		"instructions": {
 			"key": "credit-transfer",
-			"ref": "5605617",
+			"ref": "1043002",
 			"credit_transfer": [
 				{
 					"iban": "FI2112345600000785",

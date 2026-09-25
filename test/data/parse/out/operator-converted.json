@@ -60,9 +60,9 @@
 			"i": 1,
 			"quantity": "1.00",
 			"item": {
-				"name": "Expenses, group",
+				"name": "Kulut",
 				"price": "0.79",
-				"unit": "one"
+				"unit": "piece"
 			},
 			"sum": "0.79",
 			"taxes": [

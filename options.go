@@ -25,7 +25,7 @@ func WithSenderOperator(id string) Option {
 	}
 }
 
-// WithMessageID sets the message frame's identifier, which the envelope's
+// WithMessageID sets the message frame's identifier, which the invoice's
 // UUID otherwise provides.
 func WithMessageID(id string) Option {
 	return func(o *options) {

@@ -57,7 +57,7 @@ func newAddon() *tax.AddonDef {
 				reference, and a due date), which is mandatory on every invoice.
 
 				For more information on Finvoice, visit
-				[www.finanssiala.fi](https://www.finanssiala.fi/en/topics/finvoice-implementation-guidelines/).
+				[www.finanssiala.fi](https://www.finanssiala.fi/en/topics/finvoice-standard/).
 			`),
 		},
 	}

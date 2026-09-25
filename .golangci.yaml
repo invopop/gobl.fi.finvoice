@@ -1,0 +1,26 @@
+version: "2"
+
+output:
+  formats:
+    text:
+      path: stdout
+
+linters:
+  enable:
+    - errname
+    - gocyclo
+    - nakedret
+    - revive
+    - unconvert
+    - unparam
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # Embedding is complex in GOBL, so this check is disabled.
+        - -QF1008
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

@@ -2,7 +2,6 @@ package fifinvoice
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -22,8 +21,10 @@ const (
 	// two to five, per the monetaryAmount pattern.
 	amountMinExp uint32 = 2
 	amountMaxExp uint32 = 5
-	// percentMaxExp is the largest exponent a Finvoice percentage can carry:
-	// a num.Percentage of exponent 5 renders with three decimals.
+	// percentMinExp and percentMaxExp bound the decimals of a percentage:
+	// one to three, per the guidelines, which a num.Percentage of exponent
+	// three to five renders with.
+	percentMinExp uint32 = 3
 	percentMaxExp uint32 = 5
 )
 
@@ -89,6 +90,9 @@ func formatQuantity(a num.Amount) string {
 }
 
 func formatPercent(p num.Percentage) string {
+	if p.Exp() < percentMinExp {
+		p = p.Rescale(percentMinExp)
+	}
 	if p.Exp() > percentMaxExp {
 		p = p.Rescale(percentMaxExp)
 	}
@@ -141,30 +145,38 @@ func parseDate(s string) (cal.Date, error) {
 	return cal.DateOf(t), nil
 }
 
-// cut trims s to at most n runes, for the elements Finvoice caps.
+// tooLong reports whether s exceeds the n characters an element allows.
+func tooLong(s string, n int) bool {
+	return utf8.RuneCountInString(s) > n
+}
+
+// cut trims s to at most n characters, for the display texts Finvoice caps
+// and cannot repeat.
 func cut(s string, n int) string {
-	if utf8.RuneCountInString(s) <= n {
+	if !tooLong(s, n) {
 		return s
 	}
 	return string([]rune(s)[:n])
 }
 
-// chunks splits s into pieces of at most n runes each, keeping at most max
-// of them.
-func chunks(s string, n, max int) []string {
+// split breaks s into pieces of at most n characters at word boundaries
+// where it can, keeping at most limit of them, for the texts Finvoice lets
+// an element repeat for.
+func split(s string, n, limit int) []string {
 	var out []string
-	r := []rune(s)
-	for len(r) > 0 && len(out) < max {
-		end := min(n, len(r))
-		out = append(out, string(r[:end]))
-		r = r[end:]
+	rest := strings.TrimSpace(s)
+	for rest != "" && len(out) < limit {
+		if !tooLong(rest, n) {
+			out = append(out, rest)
+			break
+		}
+		r := []rune(rest)
+		end := n
+		if i := strings.LastIndex(string(r[:n+1]), " "); i > 0 {
+			end = utf8.RuneCountInString(string(r[:n+1])[:i])
+		}
+		out = append(out, strings.TrimSpace(string(r[:end])))
+		rest = strings.TrimSpace(string(r[end:]))
 	}
 	return out
 }
-
-var (
-	// referenceSPY is a Finnish bank reference number (viitenumero).
-	referenceSPY = regexp.MustCompile(`^[0-9]{2,20}$`)
-	// referenceISO is an ISO 11649 creditor reference.
-	referenceISO = regexp.MustCompile(`^RF[0-9]{2}[0-9A-Za-z]{1,21}$`)
-)

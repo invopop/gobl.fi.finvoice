@@ -1,7 +1,8 @@
 package fifinvoice
 
 import (
-	"errors"
+	"fmt"
+	"regexp"
 
 	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/catalogues/untdid"
@@ -11,15 +12,25 @@ import (
 
 // Finvoice payment order (EPI) constants.
 const (
-	// chargeOptionShared means bank charges are shared by payer and payee,
-	// the usual choice for SEPA transfers.
+	// chargeOptionShared means bank charges are shared by payer and payee;
+	// chargeOptionSEPA is the service-level option of a SEPA transfer.
 	chargeOptionShared = "SHA"
+	chargeOptionSEPA   = "SLEV"
 
 	referenceSchemeSPY = "SPY"
 	referenceSchemeISO = "ISO"
 
 	// beneficiaryNameMaxLength bounds EpiNameAddressDetails.
 	beneficiaryNameMaxLength = 35
+	// referenceMaxLengthEpi bounds EpiReference; a reference is never cut.
+	referenceMaxLengthEpi = 35
+)
+
+var (
+	// referenceSPY is a Finnish bank reference number (viitenumero).
+	referenceSPY = regexp.MustCompile(`^[0-9]{2,20}$`)
+	// referenceISO is an ISO 11649 creditor reference.
+	referenceISO = regexp.MustCompile(`^RF[0-9]{2}[0-9A-Za-z]{1,21}$`)
 )
 
 // EpiDetails is the payment order: reference, beneficiary account and the
@@ -57,12 +68,12 @@ type EpiBeneficiaryPartyDetails struct {
 // EpiPaymentInstructionDetails says what to pay, by when, and under which
 // reference.
 type EpiPaymentInstructionDetails struct {
-	RemittanceInfoIdentifier *Account   `xml:"EpiRemittanceInfoIdentifier,omitempty"`
-	InstructedAmount         Amount     `xml:"EpiInstructedAmount"`
-	Charge                   EpiCharge  `xml:"EpiCharge"`
-	DateOptionDate           *Date      `xml:"EpiDateOptionDate"`
-	PaymentMeansCode         string     `xml:"EpiPaymentMeansCode,omitempty"`
-	PaymentMeansText         string     `xml:"EpiPaymentMeansText,omitempty"`
+	RemittanceInfoIdentifier *Account  `xml:"EpiRemittanceInfoIdentifier,omitempty"`
+	InstructedAmount         Amount    `xml:"EpiInstructedAmount"`
+	Charge                   EpiCharge `xml:"EpiCharge"`
+	DateOptionDate           *Date     `xml:"EpiDateOptionDate"`
+	PaymentMeansCode         string    `xml:"EpiPaymentMeansCode,omitempty"`
+	PaymentMeansText         string    `xml:"EpiPaymentMeansText,omitempty"`
 }
 
 // EpiCharge says who bears the bank charges.
@@ -71,28 +82,27 @@ type EpiCharge struct {
 	Option string `xml:"ChargeOption,attr"`
 }
 
-var (
-	errPaymentInstructionsRequired = errors.New("payment instructions with a credit transfer account are required (Finvoice EpiDetails)")
-	errDueDateRequired             = errors.New("a payment due date is required (Finvoice EpiDateOptionDate)")
-)
-
 // newEpiDetails builds the payment order from the payment instructions the
 // addon requires: the first credit transfer account, the reference and the
-// first due date.
+// one due date.
 func (c *converter) newEpiDetails() (*EpiDetails, error) {
 	p := c.inv.Payment
-	if p == nil || p.Instructions == nil || len(p.Instructions.CreditTransfer) == 0 {
-		return nil, errPaymentInstructionsRequired
-	}
 	instr := p.Instructions
 	ct := instr.CreditTransfer[0]
-	account := newAccountID(ct)
-	if ct == nil || account == nil {
-		return nil, errPaymentInstructionsRequired
+	if tooLong(instr.Ref.String(), referenceMaxLengthEpi) {
+		return nil, fmt.Errorf("payment reference %q is longer than the %d characters Finvoice allows", instr.Ref, referenceMaxLengthEpi)
 	}
-	due := firstDueDate(p.Terms)
-	if due == nil {
-		return nil, errDueDateRequired
+	due, err := dueDate(p.Terms)
+	if err != nil {
+		return nil, err
+	}
+	payee := c.inv.Supplier
+	if p.Payee != nil {
+		payee = p.Payee
+	}
+	charge := chargeOptionShared
+	if instr.Key.Has(pay.MeansKeySEPA) {
+		charge = chargeOptionSEPA
 	}
 
 	epi := &EpiDetails{
@@ -102,8 +112,8 @@ func (c *converter) newEpiDetails() (*EpiDetails, error) {
 		},
 		Party: EpiPartyDetails{
 			Beneficiary: EpiBeneficiaryPartyDetails{
-				NameAddress: cut(c.inv.Supplier.Name, beneficiaryNameMaxLength),
-				AccountID:   *account,
+				NameAddress: cut(payee.Name, beneficiaryNameMaxLength),
+				AccountID:   *newAccountID(ct),
 			},
 		},
 		PaymentInstruction: EpiPaymentInstructionDetails{
@@ -112,8 +122,8 @@ func (c *converter) newEpiDetails() (*EpiDetails, error) {
 				Value:    formatEpiAmount(c.signed(c.instructedAmount())),
 				Currency: c.cur.String(),
 			},
-			Charge:           EpiCharge{Value: chargeOptionShared, Option: chargeOptionShared},
-			DateOptionDate:   newDate(*due),
+			Charge:           EpiCharge{Value: charge, Option: charge},
+			DateOptionDate:   newDate(due),
 			PaymentMeansCode: instr.Ext.Get(untdid.ExtKeyPaymentMeans).String(),
 		},
 	}
@@ -128,27 +138,19 @@ func (c *converter) newEpiDetails() (*EpiDetails, error) {
 // payable total when nothing was paid in advance.
 func (c *converter) instructedAmount() num.Amount {
 	t := c.inv.Totals
-	if t == nil {
-		return num.MakeAmount(0, c.cur.Def().Subunits)
-	}
 	if t.Due != nil {
 		return *t.Due
 	}
 	return t.Payable
 }
 
-// newAccountID writes the account as an IBAN, or a BBAN when only a plain
-// account number is given.
+// newAccountID writes the account's IBAN, which the addon requires on every
+// credit transfer it validates.
 func newAccountID(ct *pay.CreditTransfer) *Account {
-	switch {
-	case ct == nil:
+	if ct == nil || ct.IBAN == "" {
 		return nil
-	case ct.IBAN != "":
-		return &Account{Value: ct.IBAN.String(), Scheme: schemeIBAN}
-	case ct.Number != "":
-		return &Account{Value: ct.Number.String(), Scheme: schemeBBAN}
 	}
-	return nil
+	return &Account{Value: ct.IBAN.String(), Scheme: schemeIBAN}
 }
 
 // newRemittanceInfo writes the payment reference with its scheme: SPY for a
@@ -165,10 +167,24 @@ func newRemittanceInfo(instr *pay.Instructions) *Account {
 	return nil
 }
 
-func firstDueDate(terms *pay.Terms) *cal.Date {
-	if terms == nil {
-		return nil
+// dueDate is the payment order's one date. Finvoice pays the whole amount
+// on it, so instalments over several dates cannot be expressed and are
+// refused.
+func dueDate(terms *pay.Terms) (cal.Date, error) {
+	var dates []cal.Date
+	for _, dd := range terms.DueDates {
+		if dd != nil && dd.Date != nil {
+			dates = append(dates, *dd.Date)
+		}
 	}
+	if len(dates) > 1 {
+		return cal.Date{}, fmt.Errorf("payment terms have %d due dates, Finvoice carries one", len(dates))
+	}
+	return dates[0], nil
+}
+
+// firstDueDate is the due date the payment terms name, if any.
+func firstDueDate(terms *pay.Terms) *cal.Date {
 	for _, dd := range terms.DueDates {
 		if dd != nil && dd.Date != nil {
 			return dd.Date

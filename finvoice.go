@@ -19,9 +19,9 @@ import (
 const Version = "3.0"
 
 var (
-	// ErrUnsupportedDocument is returned when the envelope holds anything
-	// other than an invoice.
-	ErrUnsupportedDocument = errors.New("expected an invoice")
+	// ErrUnsupportedDocumentType is returned when the envelope holds anything
+	// other than an invoice, or a Finvoice message that is not one.
+	ErrUnsupportedDocumentType = errors.New("unsupported document type")
 	// ErrSenderOperatorRequired is returned when the customer names its
 	// operator but the conversion was given no sender operator to route from.
 	ErrSenderOperatorRequired = errors.New("sender operator is required to route to the customer's operator")
@@ -67,16 +67,22 @@ type converter struct {
 }
 
 // Convert turns a GOBL envelope holding an invoice or credit note into a
-// Finvoice document. The invoice must declare the fi-finvoice-v3 addon.
+// Finvoice document. The fi-finvoice-v3 addon is added when the invoice does
+// not declare it, and the invoice must validate under it.
 func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 	inv, ok := env.Extract().(*bill.Invoice)
 	if !ok || inv == nil {
-		return nil, ErrUnsupportedDocument
+		return nil, ErrUnsupportedDocumentType
 	}
-	if !finvoice.V3.In(inv.GetAddons()...) {
-		return nil, fmt.Errorf("invoice must declare the %s addon", finvoice.V3)
+	if err := ensureAddon(env, inv); err != nil {
+		return nil, err
 	}
 	if err := inv.RemoveIncludedTaxes(); err != nil {
+		return nil, err
+	}
+	// Finvoice amounts carry the currency's decimals, and the format has
+	// InvoiceTotalRoundoffAmount for the difference rounding makes.
+	if err := inv.RoundToCurrency(); err != nil {
 		return nil, err
 	}
 
@@ -88,12 +94,13 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 	}
 	if c.opts.messageID == "" {
 		c.opts.messageID = inv.UUID.String()
-		if inv.UUID.IsZero() {
-			c.opts.messageID = env.Head.UUID.String()
-		}
 	}
 
 	frame, err := c.newTransmission()
+	if err != nil {
+		return nil, err
+	}
+	details, err := c.newInvoiceDetails()
 	if err != nil {
 		return nil, err
 	}
@@ -108,18 +115,33 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 		Seller:         c.newSeller(),
 		Buyer:          c.newBuyer(),
 		DeliveryParty:  c.newDeliveryParty(),
-		InvoiceDetails: c.newInvoiceDetails(),
+		InvoiceDetails: details,
 		Rows:           c.newRows(),
 		Epi:            epi,
 	}
 	c.applySellerDetails(doc)
-	c.applyBuyerDetails(doc)
+	if err := c.applyBuyerDetails(doc); err != nil {
+		return nil, err
+	}
 	c.applyDelivery(doc)
 	for _, u := range c.opts.urls {
 		doc.InvoiceURLNames = append(doc.InvoiceURLNames, u.name)
 		doc.InvoiceURLs = append(doc.InvoiceURLs, u.url)
 	}
 	return doc, nil
+}
+
+// ensureAddon declares the addon on an invoice that lacks it and validates
+// the envelope, so that a document the addon rejects never reaches the
+// mapping.
+func ensureAddon(env *gobl.Envelope, inv *bill.Invoice) error {
+	if !finvoice.V3.In(inv.GetAddons()...) {
+		inv.SetAddons(append(inv.GetAddons(), finvoice.V3)...)
+		if err := env.Calculate(); err != nil {
+			return err
+		}
+	}
+	return env.Validate()
 }
 
 // Bytes renders the document as indented UTF-8 XML.

@@ -27,26 +27,28 @@ type InvoiceRow struct {
 	ArticleDescription string      `xml:"ArticleDescription,omitempty"`
 	EANCode            *Identifier `xml:"EanCode,omitempty"`
 
-	DeliveredQuantity *Quantity `xml:"DeliveredQuantity,omitempty"`
-	OrderedQuantity   *Quantity `xml:"OrderedQuantity,omitempty"`
-	InvoicedQuantity  *Quantity `xml:"InvoicedQuantity,omitempty"`
-	StartDate         *Date     `xml:"StartDate,omitempty"`
-	EndDate           *Date     `xml:"EndDate,omitempty"`
+	DeliveredQuantity []*Quantity `xml:"DeliveredQuantity,omitempty"`
+	OrderedQuantity   *Quantity   `xml:"OrderedQuantity,omitempty"`
+	InvoicedQuantity  []*Quantity `xml:"InvoicedQuantity,omitempty"`
+	StartDate         *Date       `xml:"StartDate,omitempty"`
+	EndDate           *Date       `xml:"EndDate,omitempty"`
 
-	UnitPriceAmount *UnitAmount `xml:"UnitPriceAmount,omitempty"`
+	UnitPriceAmount       *UnitAmount `xml:"UnitPriceAmount,omitempty"`
+	UnitPriceNetAmount    *UnitAmount `xml:"UnitPriceNetAmount,omitempty"`
+	UnitPriceBaseQuantity *Quantity   `xml:"UnitPriceBaseQuantity,omitempty"`
 
 	RowPositionIdentifier string `xml:"RowPositionIdentifier,omitempty"`
 	OriginalInvoiceNumber string `xml:"OriginalInvoiceNumber,omitempty"`
 
 	FreeText []string `xml:"RowFreeText,omitempty"`
 
-	DiscountPercent     string                  `xml:"RowDiscountPercent,omitempty"`
-	DiscountAmount      *Amount                 `xml:"RowDiscountAmount,omitempty"`
-	DiscountBaseAmount  *Amount                 `xml:"RowDiscountBaseAmount,omitempty"`
-	DiscountTypeCode    string                  `xml:"RowDiscountTypeCode,omitempty"`
-	DiscountTypeText    string                  `xml:"RowDiscountTypeText,omitempty"`
-	ProgressiveDiscount []*RowDiscountDetails   `xml:"RowProgressiveDiscountDetails,omitempty"`
-	Charges             []*RowChargeDetails     `xml:"RowChargeDetails,omitempty"`
+	DiscountPercent     string                `xml:"RowDiscountPercent,omitempty"`
+	DiscountAmount      *Amount               `xml:"RowDiscountAmount,omitempty"`
+	DiscountBaseAmount  *Amount               `xml:"RowDiscountBaseAmount,omitempty"`
+	DiscountTypeCode    string                `xml:"RowDiscountTypeCode,omitempty"`
+	DiscountTypeText    string                `xml:"RowDiscountTypeText,omitempty"`
+	ProgressiveDiscount []*RowDiscountDetails `xml:"RowProgressiveDiscountDetails,omitempty"`
+	Charges             []*RowChargeDetails   `xml:"RowChargeDetails,omitempty"`
 
 	VatRatePercent    string  `xml:"RowVatRatePercent,omitempty"`
 	VatCode           string  `xml:"RowVatCode,omitempty"`
@@ -84,6 +86,8 @@ func (c *converter) newRows() []*InvoiceRow {
 	return rows
 }
 
+// newRow writes a line. The row's VAT amount is left to the breakdown: GOBL
+// works the tax out per rate, so per-row amounts would not add up to it.
 func (c *converter) newRow(line *bill.Line) *InvoiceRow {
 	item := line.Item
 	row := &InvoiceRow{
@@ -91,34 +95,45 @@ func (c *converter) newRow(line *bill.Line) *InvoiceRow {
 		ArticleName:           cut(item.Name, articleNameMaxLength),
 		ArticleDescription:    cut(item.Description, freeTextMaxLength),
 		EANCode:               itemEAN(item),
-		InvoicedQuantity:      c.newQuantity(line.Quantity, item),
+		InvoicedQuantity:      []*Quantity{c.newQuantity(line.Quantity, item)},
 		RowPositionIdentifier: strconv.Itoa(line.Index),
+		StartDate:             nil,
 	}
 	if item.Price != nil {
-		row.UnitPriceAmount = &UnitAmount{
+		// GOBL's price is the net unit price (BT-146); with no item-level
+		// discount it is the gross one (BT-148) too.
+		price := &UnitAmount{
 			Value:      formatAmount(*item.Price),
 			Currency:   c.cur.String(),
 			UnitCode:   cut(item.Unit.String(), unitCodeMaxLength),
 			UnitCodeUN: unitCodeUN(item),
 		}
+		row.UnitPriceAmount = price
+		row.UnitPriceNetAmount = price
 	}
 	if line.Period != nil {
 		row.StartDate = newDatePtr(line.Period.Start)
 		row.EndDate = newDatePtr(line.Period.End)
 	}
 	for _, n := range line.Notes {
-		if n != nil && n.Text != "" {
-			row.FreeText = append(row.FreeText, cut(n.Text, freeTextMaxLength))
+		if n != nil {
+			row.FreeText = append(row.FreeText, split(n.Text, freeTextMaxLength, freeTextLines)...)
 		}
 	}
 	c.applyRowDiscounts(row, line)
 	c.applyRowCharges(row, line)
-	c.applyRowTaxes(row, line)
+	if line.Total != nil {
+		row.VatExcludedAmount = c.amount(*line.Total)
+	}
+	if vat := vatCombo(line.Taxes); vat != nil {
+		row.VatCode = vatCategory(vat.Ext)
+		row.VatRatePercent = vatRatePercent(vat.Ext, vat.Percent)
+	}
 	return row
 }
 
-// newQuantity writes the quantity with the GOBL unit as free text and the
-// UN/ECE code the EN 16931 addon derived from it; negated on a credit note.
+// newQuantity writes the quantity with the GOBL unit as free text and its
+// UN/ECE code; negated on a credit note.
 func (c *converter) newQuantity(q num.Amount, item *org.Item) *Quantity {
 	return &Quantity{
 		Value:      formatQuantity(c.signed(q)),
@@ -138,10 +153,7 @@ func unitCodeUN(item *org.Item) string {
 
 func itemEAN(item *org.Item) *Identifier {
 	for _, id := range item.Identities {
-		if id == nil {
-			continue
-		}
-		if id.Key.In(org.IdentityKeyEAN, org.IdentityKeyGTIN) {
+		if id != nil && id.Key.In(org.IdentityKeyEAN, org.IdentityKeyGTIN) {
 			return &Identifier{Value: id.Code.String()}
 		}
 	}
@@ -196,24 +208,4 @@ func (c *converter) applyRowCharges(row *InvoiceRow, line *bill.Line) {
 		}
 		row.Charges = append(row.Charges, d)
 	}
-}
-
-// applyRowTaxes writes the line's VAT rate and the amounts before and after
-// it. The VAT amount is the line total at the rate, rounded to the currency.
-func (c *converter) applyRowTaxes(row *InvoiceRow, line *bill.Line) {
-	if line.Total == nil {
-		return
-	}
-	total := *line.Total
-	row.VatExcludedAmount = c.amount(total)
-	vatAmount := num.MakeAmount(0, c.cur.Def().Subunits)
-	if vat := vatCombo(line.Taxes); vat != nil {
-		row.VatCode = vatCategory(vat.Ext)
-		if vat.Percent != nil {
-			row.VatRatePercent = formatPercent(*vat.Percent)
-			vatAmount = vat.Percent.Of(total).Rescale(c.cur.Def().Subunits)
-		}
-	}
-	row.VatAmount = c.amount(vatAmount)
-	row.Amount = c.amount(total.Add(vatAmount))
 }

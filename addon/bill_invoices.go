@@ -64,8 +64,8 @@ func billInvoiceRules() *rules.Set {
 	)
 }
 
-// firstCreditTransferHasIBAN checks the entry the UBL converter maps to
-// EpiAccountID. An empty list is handled by the presence assertion.
+// firstCreditTransferHasIBAN checks the entry that becomes EpiAccountID.
+// An empty list is handled by the presence assertion.
 func firstCreditTransferHasIBAN(val any) bool {
 	cts, ok := val.([]*pay.CreditTransfer)
 	if !ok || len(cts) == 0 {

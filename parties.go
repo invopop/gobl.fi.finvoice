@@ -1,13 +1,13 @@
 package fifinvoice
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/catalogues/iso"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/org"
-	"github.com/invopop/gobl/tax"
 )
 
 const (
@@ -15,12 +15,16 @@ const (
 	schemeBBAN = "BBAN"
 	schemeBIC  = "BIC"
 
-	// nameMaxLength bounds organisation names.
+	// nameMaxLength bounds each organisation name element, which may repeat.
 	nameMaxLength = 70
-	// streetMaxLength bounds each street line, town and post code.
-	streetMaxLength = 35
+	// nameLines is how many name elements the parties' names may take.
+	nameLines = 2
+	// addressMaxLength bounds each street line, the town and the post code.
+	addressMaxLength = 35
 	// streetLines is how many street lines an address may carry.
 	streetLines = 3
+	// emailMaxLength bounds an email address, which is left out when longer.
+	emailMaxLength = 70
 )
 
 // businessID is a Finnish Y-tunnus: seven digits, a hyphen and a check digit.
@@ -29,7 +33,7 @@ var businessID = regexp.MustCompile(`^([0-9]{7})-?([0-9])$`)
 // SellerPartyDetails identifies the seller.
 type SellerPartyDetails struct {
 	Identifier  *Identifier                 `xml:"SellerPartyIdentifier,omitempty"`
-	Name        string                      `xml:"SellerOrganisationName"`
+	Name        []string                    `xml:"SellerOrganisationName"`
 	TradingName string                      `xml:"SellerOrganisationTradingName,omitempty"`
 	TaxCode     string                      `xml:"SellerOrganisationTaxCode,omitempty"`
 	Address     *SellerPostalAddressDetails `xml:"SellerPostalAddressDetails,omitempty"`
@@ -69,7 +73,7 @@ type SellerAccountDetails struct {
 // BuyerPartyDetails identifies the buyer.
 type BuyerPartyDetails struct {
 	Identifier  *Identifier                `xml:"BuyerPartyIdentifier,omitempty"`
-	Name        string                     `xml:"BuyerOrganisationName"`
+	Name        []string                   `xml:"BuyerOrganisationName"`
 	TradingName string                     `xml:"BuyerOrganisationTradingName,omitempty"`
 	TaxCode     string                     `xml:"BuyerOrganisationTaxCode,omitempty"`
 	Address     *BuyerPostalAddressDetails `xml:"BuyerPostalAddressDetails,omitempty"`
@@ -94,7 +98,7 @@ type BuyerCommunicationDetails struct {
 // DeliveryPartyDetails identifies who receives the goods.
 type DeliveryPartyDetails struct {
 	Identifier *Identifier                   `xml:"DeliveryPartyIdentifier,omitempty"`
-	Name       string                        `xml:"DeliveryOrganisationName"`
+	Name       []string                      `xml:"DeliveryOrganisationName"`
 	TaxCode    string                        `xml:"DeliveryOrganisationTaxCode,omitempty"`
 	Address    *DeliveryPostalAddressDetails `xml:"DeliveryPostalAddressDetails"`
 }
@@ -136,7 +140,7 @@ func (c *converter) newSeller() *SellerPartyDetails {
 	p := c.inv.Supplier
 	s := &SellerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
-		Name:        cut(p.Name, nameMaxLength),
+		Name:        split(p.Name, nameMaxLength, nameLines),
 		TradingName: cut(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
@@ -157,7 +161,7 @@ func (c *converter) newBuyer() *BuyerPartyDetails {
 	p := c.inv.Customer
 	b := &BuyerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
-		Name:        cut(p.Name, nameMaxLength),
+		Name:        split(p.Name, nameMaxLength, nameLines),
 		TradingName: cut(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
@@ -187,7 +191,7 @@ func (c *converter) newDeliveryParty() *DeliveryPartyDetails {
 	}
 	return &DeliveryPartyDetails{
 		Identifier: newPartyIdentifier(d.Receiver),
-		Name:       cut(d.Receiver.Name, streetMaxLength),
+		Name:       split(d.Receiver.Name, addressMaxLength, nameLines),
 		TaxCode:    partyTaxCode(d.Receiver),
 		Address: &DeliveryPostalAddressDetails{
 			StreetName:    a.streetName,
@@ -223,9 +227,6 @@ func (c *converter) applySellerDetails(doc *Document) {
 // requires a BIC on each, so accounts without one are left to the payment
 // order alone.
 func (c *converter) newSellerAccounts() []*SellerAccountDetails {
-	if c.inv.Payment == nil || c.inv.Payment.Instructions == nil {
-		return nil
-	}
 	var out []*SellerAccountDetails
 	for _, ct := range c.inv.Payment.Instructions.CreditTransfer {
 		if ct == nil || ct.BIC == "" {
@@ -244,25 +245,39 @@ func (c *converter) newSellerAccounts() []*SellerAccountDetails {
 	return out
 }
 
-func (c *converter) applyBuyerDetails(doc *Document) {
+// applyBuyerDetails writes the buyer elements outside BuyerPartyDetails. The
+// e-invoice address is what the document is routed by, so a customer
+// without one is refused.
+func (c *converter) applyBuyerDetails(doc *Document) error {
 	p := c.inv.Customer
 	_, doc.BuyerOrganisationUnitNumber = partyAddress(p)
+	if doc.BuyerOrganisationUnitNumber == "" {
+		return fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003701120389", iso.ActorIDScheme)
+	}
 	doc.BuyerContactPersonName = contactName(p)
 	if phone, email := contactDetails(p); phone != "" || email != "" {
 		doc.BuyerCommunication = &BuyerCommunicationDetails{Phone: phone, Email: email}
 	}
+	return nil
 }
 
 func (c *converter) applyDelivery(doc *Document) {
 	d := c.inv.Delivery
-	if d == nil || d.Date == nil {
+	if d == nil || (d.Date == nil && d.Period == nil) {
 		return
 	}
-	doc.DeliveryDetails = &DeliveryDetails{Date: newDate(*d.Date)}
+	doc.DeliveryDetails = &DeliveryDetails{Date: newDatePtr(d.Date)}
+	if d.Period != nil && d.Period.Start != nil && d.Period.End != nil {
+		doc.DeliveryDetails.Period = &DeliveryPeriodDetails{
+			StartDate: newDate(*d.Period.Start),
+			EndDate:   newDate(*d.Period.End),
+		}
+	}
 }
 
 // newPartyIdentifier writes the party's legal registration: the Y-tunnus
-// for a Finnish party, else its first legal-scope identity.
+// for a Finnish party, else its first legal-scope identity with the ISO 6523
+// scheme the EN 16931 addon records on it.
 func newPartyIdentifier(p *org.Party) *Identifier {
 	if p == nil {
 		return nil
@@ -274,7 +289,10 @@ func newPartyIdentifier(p *org.Party) *Identifier {
 	}
 	for _, id := range p.Identities {
 		if id != nil && id.Scope == org.IdentityScopeLegal && id.Code != "" {
-			return &Identifier{Value: id.Code.String()}
+			return &Identifier{
+				Value:    id.Code.String(),
+				SchemeID: id.Ext.Get(iso.ExtKeySchemeID).String(),
+			}
 		}
 	}
 	return nil
@@ -288,27 +306,32 @@ func partyTaxCode(p *org.Party) string {
 	return p.TaxID.String()
 }
 
+// newPostalAddress writes the first address, which Finvoice only takes with
+// a street, a town and a post code; an address missing one of them is left
+// out rather than filled in.
 func newPostalAddress(p *org.Party) *postalAddress {
 	if p == nil || len(p.Addresses) == 0 || p.Addresses[0] == nil {
 		return nil
 	}
 	a := p.Addresses[0]
+	if a.Locality == "" || a.Code == "" {
+		return nil
+	}
 	out := &postalAddress{
-		townName:      cut(a.Locality, streetMaxLength),
-		postCode:      cut(a.Code.String(), streetMaxLength),
-		subdivision:   cut(a.Region, streetMaxLength),
+		townName:      cut(a.Locality, addressMaxLength),
+		postCode:      cut(a.Code.String(), addressMaxLength),
+		subdivision:   cut(a.Region, addressMaxLength),
 		countryCode:   a.Country.String(),
-		postOfficeBox: cut(a.PostOfficeBox, streetMaxLength),
+		postOfficeBox: cut(a.PostOfficeBox, addressMaxLength),
 	}
 	street := strings.TrimSpace(a.Street + " " + a.Number)
-	for _, line := range []string{street, a.StreetExtra} {
-		if line != "" && len(out.streetName) < streetLines {
-			out.streetName = append(out.streetName, cut(line, streetMaxLength))
-		}
+	out.streetName = split(street, addressMaxLength, streetLines)
+	if extra := split(a.StreetExtra, addressMaxLength, streetLines-len(out.streetName)); len(extra) > 0 {
+		out.streetName = append(out.streetName, extra...)
 	}
 	if len(out.streetName) == 0 {
 		// A street line is required; the PO box or town stands in.
-		out.streetName = []string{cut(firstNonEmpty(a.PostOfficeBox, a.Locality), streetMaxLength)}
+		out.streetName = []string{cut(firstNonEmpty(a.PostOfficeBox, a.Locality), addressMaxLength)}
 	}
 	return out
 }
@@ -327,15 +350,17 @@ func contactName(p *org.Party) string {
 	return cut(strings.Join(parts, " "), nameMaxLength)
 }
 
+// contactDetails returns the first phone and email; an email too long for
+// its element is left out, since a cut address reaches nobody.
 func contactDetails(p *org.Party) (phone, email string) {
 	if p == nil {
 		return "", ""
 	}
 	if len(p.Telephones) > 0 && p.Telephones[0] != nil {
-		phone = cut(p.Telephones[0].Number, streetMaxLength)
+		phone = cut(p.Telephones[0].Number, addressMaxLength)
 	}
-	if len(p.Emails) > 0 && p.Emails[0] != nil {
-		email = cut(p.Emails[0].Address, nameMaxLength)
+	if len(p.Emails) > 0 && p.Emails[0] != nil && !tooLong(p.Emails[0].Address, emailMaxLength) {
+		email = p.Emails[0].Address
 	}
 	return phone, email
 }
@@ -347,23 +372,4 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
-}
-
-// vatCategory reads the UNTDID 5305 category the EN 16931 addon records on
-// a tax combo or rate total.
-func vatCategory(ext tax.Extensions) string {
-	return ext.Get(untdidTaxCategory).String()
-}
-
-// vatCombo is the VAT tax on a line, charge or discount, if any.
-func vatCombo(set tax.Set) *tax.Combo {
-	if set == nil {
-		return nil
-	}
-	return set.Get(tax.CategoryVAT)
-}
-
-// invoiceNumber is the series and code together, the document's one number.
-func invoiceNumber(inv *bill.Invoice) string {
-	return inv.Series.Join(inv.Code).String()
 }

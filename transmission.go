@@ -45,9 +45,6 @@ type MessageDetails struct {
 // operator's own address tables.
 func (c *converter) newTransmission() (*MessageTransmissionDetails, error) {
 	customer := c.inv.Customer
-	if customer == nil {
-		return nil, nil
-	}
 	receiverOperator := customer.Ext.Get(finvoice.ExtKeyOperator).String()
 	if receiverOperator == "" {
 		return nil, nil
@@ -57,11 +54,11 @@ func (c *converter) newTransmission() (*MessageTransmissionDetails, error) {
 	}
 	from := newAddressIdentifier(c.inv.Supplier)
 	if from == nil {
-		return nil, fmt.Errorf("supplier needs an %s endpoint to route the message", iso.ActorIDScheme)
+		return nil, fmt.Errorf("supplier needs an e-invoice address as an endpoint, such as %s::0216:003723456780", iso.ActorIDScheme)
 	}
 	to := newAddressIdentifier(customer)
 	if to == nil {
-		return nil, fmt.Errorf("customer needs an %s endpoint to route the message", iso.ActorIDScheme)
+		return nil, fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003701120389", iso.ActorIDScheme)
 	}
 	return &MessageTransmissionDetails{
 		Sender: MessageSenderDetails{

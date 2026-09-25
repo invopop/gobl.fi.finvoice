@@ -5,9 +5,9 @@
 <SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>
 <SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
 <SellerPostalAddressDetails>
-<SellerStreetName>Tykistökatu 4 B</SellerStreetName>
-<SellerTownName>Turku</SellerTownName>
-<SellerPostCodeIdentifier>20520</SellerPostCodeIdentifier>
+<SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+<SellerTownName>Helsinki</SellerTownName>
+<SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
 <CountryCode>FI</CountryCode>
 </SellerPostalAddressDetails>
 </SellerPartyDetails>
@@ -37,9 +37,9 @@
 <InvoiceTypeCode>INV01</InvoiceTypeCode>
 <InvoiceTypeText>LASKU</InvoiceTypeText>
 <OriginCode>Original</OriginCode>
-<InvoiceNumber>560</InvoiceNumber>
+<InvoiceNumber>1042</InvoiceNumber>
 <InvoiceDate Format="CCYYMMDD">20260922</InvoiceDate>
-<SellersBuyerIdentifier>59</SellersBuyerIdentifier>
+<SellersBuyerIdentifier>17</SellersBuyerIdentifier>
 <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatExcludedAmount>
 <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">0,00</InvoiceTotalVatAmount>
 <InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatIncludedAmount>
@@ -61,13 +61,13 @@
 </InvoiceDetails>
 <InvoiceRow>
 <ArticleIdentifier>11</ArticleIdentifier>
-<ArticleName>Expenses, group</ArticleName>
+<ArticleName>Kulut</ArticleName>
 <DeliveredQuantity QuantityUnitCode="h">1,00</DeliveredQuantity>
 <OrderedQuantity QuantityUnitCode="h">1,00</OrderedQuantity>
 <InvoicedQuantity QuantityUnitCode="h">1,00</InvoicedQuantity>
 <UnitPriceAmount AmountCurrencyIdentifier="EUR">1,00</UnitPriceAmount>
 <RowPositionIdentifier>1</RowPositionIdentifier>
-<RowFreeText>Reinvoiced expenses</RowFreeText>
+<RowFreeText>Laskutettavat kulut</RowFreeText>
 <RowVatRatePercent>0,000</RowVatRatePercent>
 <RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
 <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</RowVatExcludedAmount>
@@ -76,7 +76,7 @@
 <EpiDetails>
 <EpiIdentificationDetails>
 <EpiDate Format="CCYYMMDD">20260922</EpiDate>
-<EpiReference>5605604</EpiReference>
+<EpiReference>1042005</EpiReference>
 </EpiIdentificationDetails>
 <EpiPartyDetails>
 <EpiBfiPartyDetails>
@@ -89,12 +89,12 @@
 </EpiBeneficiaryPartyDetails>
 </EpiPartyDetails>
 <EpiPaymentInstructionDetails>
-<EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">5605604</EpiRemittanceInfoIdentifier>
+<EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">1042005</EpiRemittanceInfoIdentifier>
 <EpiInstructedAmount AmountCurrencyIdentifier="EUR">1,00</EpiInstructedAmount>
 <EpiCharge ChargeOption="SHA">SHA</EpiCharge>
 <EpiDateOptionDate Format="CCYYMMDD">20261022</EpiDateOptionDate>
 </EpiPaymentInstructionDetails>
 </EpiDetails>
 <InvoiceUrlNameText>PDFFILE</InvoiceUrlNameText>
-<InvoiceUrlText>file://1592907450.PDF</InvoiceUrlText>
+<InvoiceUrlText>file://lasku-1042.PDF</InvoiceUrlText>
 </Finvoice>

@@ -21,7 +21,7 @@ var extensions = []*cbc.Definition{
 			i18n.EN: here.Doc(`
 				Identifier of the e-invoice operator (intermediator) the party receives
 				e-invoices through, quoted alongside the party's e-invoice address: an
-				operator's own OVT code such as ~003723327487~, or a bank's BIC such
+				operator's own OVT code such as ~003700010001~, or a bank's BIC such
 				as ~NDEAFIHH~.
 
 				A Finnish e-invoice address may be registered with several operators, and
@@ -35,7 +35,7 @@ var extensions = []*cbc.Definition{
 						{ "uri": "iso6523-actorid-upis::0216:003701120389" }
 					],
 					"ext": {
-						"fi-finvoice-operator": "003723327487"
+						"fi-finvoice-operator": "003700010001"
 					}
 				}
 				~~~
