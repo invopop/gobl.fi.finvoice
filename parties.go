@@ -3,6 +3,7 @@ package fifinvoice
 import (
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/invopop/gobl/catalogues/iso"
 	"github.com/invopop/gobl/l10n"
@@ -325,8 +326,13 @@ func newPostalAddress(p *org.Party) *postalAddress {
 		out.streetName = append(out.streetName, extra...)
 	}
 	if len(out.streetName) == 0 {
-		// A street line is required; the PO box or town stands in.
-		out.streetName = []string{firstNonEmpty(out.postOfficeBox, out.townName)}
+		// A street line of at least two characters is required; the PO box or
+		// the town stands in.
+		street := out.townName
+		if utf8.RuneCountInString(out.postOfficeBox) > 1 {
+			street = out.postOfficeBox
+		}
+		out.streetName = []string{street}
 	}
 	return out
 }

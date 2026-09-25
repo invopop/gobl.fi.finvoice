@@ -294,6 +294,15 @@ func TestConvertLimits(t *testing.T) {
 		assert.Equal(t, 35, utf8.RuneCountInString(doc.Buyer.Address.StreetName[0]))
 		assert.Equal(t, 100, utf8.RuneCountInString(doc.Rows[0].ArticleName))
 	})
+	t.Run("a one-character last word stays with the word before it", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "reverse-charge")
+		inv.Delivery.Receiver.Name = "Asunto Oy Helsingin Mannerheimintie 5"
+		inv.Customer.Addresses[0].Street = "Kuninkaankartanonkatu Pohjoinen"
+		inv.Customer.Addresses[0].Number = "12 B"
+		doc := convertAdjusted(t, env)
+		assert.Equal(t, []string{"Asunto Oy Helsingin", "Mannerheimintie 5"}, doc.DeliveryParty.Name)
+		assert.Equal(t, []string{"Kuninkaankartanonkatu Pohjoinen", "12 B"}, doc.Buyer.Address.StreetName[:2])
+	})
 	t.Run("texts split at words", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")
 		inv.Payment.Terms.Notes = "Maksuehto 14 päivää netto, viivästyskorko korkolain mukaan ja perintäkulut peritään erikseen"
@@ -345,6 +354,15 @@ func TestConvertOmissions(t *testing.T) {
 		inv.Customer.Addresses[0].StreetExtra = ""
 		doc := convertAdjusted(t, env)
 		assert.Equal(t, []string{"Espoo"}, doc.Buyer.Address.StreetName)
+	})
+	t.Run("address with a one-digit PO box and no street", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Customer.Addresses[0].Street = ""
+		inv.Customer.Addresses[0].StreetExtra = ""
+		inv.Customer.Addresses[0].PostOfficeBox = "5"
+		doc := convertAdjusted(t, env)
+		assert.Equal(t, []string{"Espoo"}, doc.Buyer.Address.StreetName)
+		assert.Equal(t, "5", doc.Buyer.Address.PostOfficeBox)
 	})
 }
 

@@ -18,7 +18,8 @@ type invoiceURL struct {
 }
 
 // WithSenderOperator names the e-invoice operator the message is sent
-// through, written as the sender's intermediator in the message frame.
+// through, written as the sender's intermediator in the message frame; the
+// schema takes 2 to 35 characters.
 func WithSenderOperator(id string) Option {
 	return func(o *options) {
 		o.senderOperator = id
@@ -26,7 +27,7 @@ func WithSenderOperator(id string) Option {
 }
 
 // WithMessageID sets the message frame's identifier, which the invoice's
-// UUID otherwise provides.
+// UUID otherwise provides; the schema takes 2 to 48 characters.
 func WithMessageID(id string) Option {
 	return func(o *options) {
 		o.messageID = id

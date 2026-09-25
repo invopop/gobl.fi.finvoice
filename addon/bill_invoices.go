@@ -18,7 +18,6 @@ const (
 	invoiceNumberMaxLength     = 20
 	referenceMaxLength         = 70
 	articleIdentifierMaxLength = 70
-	identityMaxLength          = 35
 	paymentReferenceMaxLength  = 35
 )
 
@@ -60,7 +59,7 @@ func billInvoiceRules() *rules.Set {
 			),
 		),
 		rules.Field("ordering",
-			rules.Assert("17", fmt.Sprintf("ordering references must be at most %d characters (Finvoice OrderIdentifier and the other references)", referenceMaxLength),
+			rules.Assert("17", fmt.Sprintf("ordering references must be at most %d characters (Finvoice BuyerReferenceIdentifier, OrderIdentifier and the other ordering references)", referenceMaxLength),
 				is.Func("ordering references fit", orderingReferencesFit),
 			),
 		),
@@ -113,19 +112,8 @@ func billInvoiceRules() *rules.Set {
 				rules.Assert("11", "payment terms are required (Finvoice EpiDateOptionDate)", is.Present),
 				rules.Field("due_dates",
 					rules.Assert("12", "at least one due date is required (Finvoice EpiDateOptionDate)", is.Present),
-					rules.Assert("20", "only one due date is supported (Finvoice EpiDateOptionDate)", is.Length(0, 1)),
+					rules.Assert("20", "at most one due date is allowed (Finvoice EpiDateOptionDate)", is.Length(0, 1)),
 				),
-			),
-		),
-	)
-}
-
-// orgPartyRules covers the parties a Finvoice document names.
-func orgPartyRules() *rules.Set {
-	return rules.For(new(org.Party),
-		rules.Field("identities",
-			rules.Assert("01", fmt.Sprintf("legal identity code must be at most %d characters (Finvoice PartyIdentifier)", identityMaxLength),
-				is.Func("legal identity fits", legalIdentityFits),
 			),
 		),
 	)
@@ -156,19 +144,6 @@ func orderingReferencesFit(val any) bool {
 			if ref != nil && !fits(ref.Series.Join(ref.Code), referenceMaxLength) {
 				return false
 			}
-		}
-	}
-	return true
-}
-
-func legalIdentityFits(val any) bool {
-	ids, ok := val.([]*org.Identity)
-	if !ok {
-		return true
-	}
-	for _, id := range ids {
-		if id != nil && id.Scope == org.IdentityScopeLegal && !fits(id.Code, identityMaxLength) {
-			return false
 		}
 	}
 	return true

@@ -317,7 +317,10 @@ func TestFinvoiceLimits(t *testing.T) {
 			inv.Type = bill.InvoiceTypeCreditNote
 			inv.Preceding = []*org.DocumentRef{{Series: "MYYNTI-2026-HELSINKI", Code: "1000", IssueDate: cal.NewDate(2026, 6, 1)}}
 		}, "preceding document number must be at most 20 characters"},
-		{"ordering reference", func(inv *bill.Invoice) {
+		{"buyer reference", func(inv *bill.Invoice) {
+			inv.Ordering = &bill.Ordering{Code: cbc.Code(long)}
+		}, "ordering references must be at most 70 characters"},
+		{"ordering document", func(inv *bill.Invoice) {
 			inv.Ordering = &bill.Ordering{Purchases: []*org.DocumentRef{{Code: cbc.Code(long)}}}
 		}, "ordering references must be at most 70 characters"},
 		{"item reference", func(inv *bill.Invoice) {
@@ -335,7 +338,7 @@ func TestFinvoiceLimits(t *testing.T) {
 				{Date: cal.NewDate(2026, 7, 15), Percent: &half},
 				{Date: cal.NewDate(2026, 7, 31), Percent: &half},
 			}
-		}, "only one due date is supported"},
+		}, "at most one due date is allowed"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

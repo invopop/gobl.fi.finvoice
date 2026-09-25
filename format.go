@@ -170,12 +170,23 @@ func split(s string, n, limit int) []string {
 			break
 		}
 		r := []rune(rest)
-		end := n
-		if i := strings.LastIndex(string(r[:n+1]), " "); i > 0 {
-			end = utf8.RuneCountInString(string(r[:n+1])[:i])
+		end := wordBoundary(r, n)
+		// Most repeating elements take at least two characters.
+		if utf8.RuneCountInString(strings.TrimSpace(string(r[end:]))) == 1 {
+			end = wordBoundary(r, end-1)
 		}
 		out = append(out, strings.TrimSpace(string(r[:end])))
 		rest = strings.TrimSpace(string(r[end:]))
 	}
 	return out
+}
+
+// wordBoundary is the position of the last space within the first n runes
+// of r, or n when there is none.
+func wordBoundary(r []rune, n int) int {
+	head := string(r[:n+1])
+	if i := strings.LastIndex(head, " "); i > 0 {
+		return utf8.RuneCountInString(head[:i])
+	}
+	return n
 }
