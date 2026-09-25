@@ -118,8 +118,15 @@ func parseAmount(s string) (num.Amount, error) {
 	return num.AmountFromString(normalizeNumber(s))
 }
 
+// parsePercent reads a percentage, dropping the trailing zeros senders pad
+// rates with ("25,50", "0,000") so the rate compares equal to its GOBL
+// definition.
 func parsePercent(s string) (num.Percentage, error) {
-	return num.PercentageFromString(normalizeNumber(s) + "%")
+	s = normalizeNumber(s)
+	if strings.Contains(s, ".") {
+		s = strings.TrimRight(strings.TrimRight(s, "0"), ".")
+	}
+	return num.PercentageFromString(s + "%")
 }
 
 func normalizeNumber(s string) string {

@@ -54,6 +54,7 @@ type SellerCommunicationDetails struct {
 // SellerInformationDetails holds the seller's general details and bank
 // accounts.
 type SellerInformationDetails struct {
+	Email    string                  `xml:"SellerCommonEmailaddressIdentifier,omitempty"`
 	Website  string                  `xml:"SellerWebaddressIdentifier,omitempty"`
 	Accounts []*SellerAccountDetails `xml:"SellerAccountDetails,omitempty"`
 }

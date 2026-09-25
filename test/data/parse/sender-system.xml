@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Finvoice Version="1.3">
+<SellerPartyDetails>
+<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>
+<SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+<SellerPostalAddressDetails>
+<SellerStreetName>Tykistökatu 4 B</SellerStreetName>
+<SellerTownName>Turku</SellerTownName>
+<SellerPostCodeIdentifier>20520</SellerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</SellerPostalAddressDetails>
+</SellerPartyDetails>
+<SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>
+<SellerInformationDetails>
+<SellerCommonEmailaddressIdentifier>laskutus@lahettaja.example</SellerCommonEmailaddressIdentifier>
+<SellerAccountDetails>
+<SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
+<SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic>
+</SellerAccountDetails>
+</SellerInformationDetails>
+<InvoiceRecipientLanguageCode>FI</InvoiceRecipientLanguageCode>
+<BuyerPartyDetails>
+<BuyerPartyIdentifier>0112038-9</BuyerPartyIdentifier>
+<BuyerOrganisationName>Vastaanottaja Oy</BuyerOrganisationName>
+<BuyerOrganisationTaxCode>FI01120389</BuyerOrganisationTaxCode>
+<BuyerPostalAddressDetails>
+<BuyerStreetName>Testitie 2</BuyerStreetName>
+<BuyerTownName>Espoo</BuyerTownName>
+<BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</BuyerPostalAddressDetails>
+</BuyerPartyDetails>
+<BuyerOrganisationUnitNumber>003701120389</BuyerOrganisationUnitNumber>
+<BuyerContactPersonName>Olli Ostaja</BuyerContactPersonName>
+<InvoiceDetails>
+<InvoiceTypeCode>INV01</InvoiceTypeCode>
+<InvoiceTypeText>LASKU</InvoiceTypeText>
+<OriginCode>Original</OriginCode>
+<InvoiceNumber>560</InvoiceNumber>
+<InvoiceDate Format="CCYYMMDD">20260922</InvoiceDate>
+<SellersBuyerIdentifier>59</SellersBuyerIdentifier>
+<InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatExcludedAmount>
+<InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">0,00</InvoiceTotalVatAmount>
+<InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatIncludedAmount>
+<VatSpecificationDetails>
+<VatBaseAmount AmountCurrencyIdentifier="EUR">1,00</VatBaseAmount>
+<VatRatePercent>0,000</VatRatePercent>
+<VatCode>Z</VatCode>
+<VatRateAmount AmountCurrencyIdentifier="EUR">0,00</VatRateAmount>
+</VatSpecificationDetails>
+<InvoiceFreeText>testing e-invoicing</InvoiceFreeText>
+<PaymentTermsDetails>
+<PaymentTermsFreeText>30pv netto</PaymentTermsFreeText>
+<InvoiceDueDate Format="CCYYMMDD">20261022</InvoiceDueDate>
+<PaymentOverDueFineDetails>
+<PaymentOverDueFineFreeText>Viivästyskorko 11,50%</PaymentOverDueFineFreeText>
+<PaymentOverDueFinePercent>11,500</PaymentOverDueFinePercent>
+</PaymentOverDueFineDetails>
+</PaymentTermsDetails>
+</InvoiceDetails>
+<InvoiceRow>
+<ArticleIdentifier>11</ArticleIdentifier>
+<ArticleName>Expenses, group</ArticleName>
+<DeliveredQuantity QuantityUnitCode="h">1,00</DeliveredQuantity>
+<OrderedQuantity QuantityUnitCode="h">1,00</OrderedQuantity>
+<InvoicedQuantity QuantityUnitCode="h">1,00</InvoicedQuantity>
+<UnitPriceAmount AmountCurrencyIdentifier="EUR">1,00</UnitPriceAmount>
+<RowPositionIdentifier>1</RowPositionIdentifier>
+<RowFreeText>Reinvoiced expenses</RowFreeText>
+<RowVatRatePercent>0,000</RowVatRatePercent>
+<RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
+<RowVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</RowVatExcludedAmount>
+<RowAmount AmountCurrencyIdentifier="EUR">1,00</RowAmount>
+</InvoiceRow>
+<EpiDetails>
+<EpiIdentificationDetails>
+<EpiDate Format="CCYYMMDD">20260922</EpiDate>
+<EpiReference>5605604</EpiReference>
+</EpiIdentificationDetails>
+<EpiPartyDetails>
+<EpiBfiPartyDetails>
+<EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+</EpiBfiPartyDetails>
+<EpiBeneficiaryPartyDetails>
+<EpiNameAddressDetails>Lähettäjä Oy</EpiNameAddressDetails>
+<EpiBei>2345678-0</EpiBei>
+<EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+</EpiBeneficiaryPartyDetails>
+</EpiPartyDetails>
+<EpiPaymentInstructionDetails>
+<EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">5605604</EpiRemittanceInfoIdentifier>
+<EpiInstructedAmount AmountCurrencyIdentifier="EUR">1,00</EpiInstructedAmount>
+<EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+<EpiDateOptionDate Format="CCYYMMDD">20261022</EpiDateOptionDate>
+</EpiPaymentInstructionDetails>
+</EpiDetails>
+<InvoiceUrlNameText>PDFFILE</InvoiceUrlNameText>
+<InvoiceUrlText>file://1592907450.PDF</InvoiceUrlText>
+</Finvoice>

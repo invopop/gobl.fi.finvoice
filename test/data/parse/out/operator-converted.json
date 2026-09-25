@@ -1,0 +1,149 @@
+{
+	"$regime": "FI",
+	"$addons": [
+		"eu-en16931-v2017",
+		"fi-finvoice-v3"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "standard",
+	"code": "00044",
+	"issue_date": "2026-09-22",
+	"currency": "EUR",
+	"tax": {
+		"rounding": "currency",
+		"ext": {
+			"untdid-document-type": "380"
+		}
+	},
+	"supplier": {
+		"name": "Lähettäjä Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "23456780"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003723456780"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Esimerkkikatu 1",
+				"locality": "Helsinki",
+				"code": "00100",
+				"country": "FI"
+			}
+		]
+	},
+	"customer": {
+		"name": "Vastaanottaja Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "01120389"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003701120389"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Testitie 2",
+				"locality": "Espoo",
+				"code": "02100",
+				"country": "FI"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "1.00",
+			"item": {
+				"name": "Expenses, group",
+				"price": "0.79",
+				"unit": "one"
+			},
+			"sum": "0.79",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "25.5%",
+					"ext": {
+						"untdid-tax-category": "S"
+					}
+				}
+			],
+			"total": "0.79"
+		}
+	],
+	"ordering": {
+		"purchases": [
+			{
+				"code": "NA"
+			}
+		]
+	},
+	"payment": {
+		"terms": {
+			"due_dates": [
+				{
+					"date": "2026-09-22",
+					"amount": "0.99",
+					"percent": "100%"
+				}
+			],
+			"notes": "--"
+		},
+		"instructions": {
+			"key": "credit-transfer",
+			"ref": "000440",
+			"credit_transfer": [
+				{
+					"iban": "FI2112345600000785",
+					"bic": "NDEAFIHH"
+				}
+			],
+			"ext": {
+				"untdid-payment-means": "30"
+			}
+		}
+	},
+	"totals": {
+		"sum": "0.79",
+		"total": "0.79",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"ext": {
+								"untdid-tax-category": "S"
+							},
+							"base": "0.79",
+							"percent": "25.5%",
+							"amount": "0.20"
+						}
+					],
+					"amount": "0.20"
+				}
+			],
+			"sum": "0.20"
+		},
+		"tax": "0.20",
+		"total_with_tax": "0.99",
+		"payable": "0.99"
+	},
+	"notes": [
+		{
+			"key": "general",
+			"text": "Test for e-invoicing",
+			"ext": {
+				"untdid-text-subject": "AAI"
+			}
+		}
+	]
+}

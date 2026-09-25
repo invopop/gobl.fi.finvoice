@@ -1,0 +1,198 @@
+{
+	"$regime": "FI",
+	"$addons": [
+		"eu-en16931-v2017",
+		"fi-finvoice-v3"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "standard",
+	"code": "2026-77",
+	"issue_date": "2026-09-22",
+	"currency": "EUR",
+	"tax": {
+		"rounding": "currency",
+		"ext": {
+			"untdid-document-type": "380"
+		},
+		"notes": [
+			{
+				"cat": "VAT",
+				"key": "exempt",
+				"text": "Terveydenhuoltopalvelu, AVL 34 §",
+				"ext": {
+					"untdid-tax-category": "E"
+				}
+			}
+		]
+	},
+	"supplier": {
+		"name": "Lähettäjä Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "23456780"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003723456780"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Esimerkkikatu 1",
+				"locality": "Helsinki",
+				"code": "00100",
+				"country": "FI"
+			}
+		],
+		"emails": [
+			{
+				"addr": "laskutus@lahettaja.example"
+			}
+		],
+		"telephones": [
+			{
+				"num": "+358 9 123 4567"
+			}
+		],
+		"ext": {
+			"fi-finvoice-operator": "NDEAFIHH"
+		}
+	},
+	"customer": {
+		"name": "Vastaanottaja Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "01120389"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003701120389"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Testitie 2",
+				"locality": "Espoo",
+				"code": "02100",
+				"country": "FI"
+			}
+		],
+		"ext": {
+			"fi-finvoice-operator": "003723327487"
+		}
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "2",
+			"item": {
+				"ref": "A-1",
+				"name": "Konsultointi",
+				"price": "50.00",
+				"unit": "h"
+			},
+			"sum": "100.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "25.5%",
+					"ext": {
+						"untdid-tax-category": "S"
+					}
+				}
+			],
+			"total": "100.00"
+		},
+		{
+			"i": 2,
+			"quantity": "1",
+			"item": {
+				"name": "Hoitokäynti",
+				"price": "200.00",
+				"unit": "one"
+			},
+			"sum": "200.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "exempt",
+					"ext": {
+						"cef-vatex": "VATEX-EU-132-1C",
+						"untdid-tax-category": "E"
+					}
+				}
+			],
+			"total": "200.00"
+		}
+	],
+	"ordering": {
+		"code": "OSTAJAN VIITE",
+		"purchases": [
+			{
+				"code": "PO-1"
+			}
+		]
+	},
+	"payment": {
+		"terms": {
+			"due_dates": [
+				{
+					"date": "2026-10-06",
+					"amount": "325.50",
+					"percent": "100%"
+				}
+			],
+			"notes": "14 pv netto"
+		},
+		"instructions": {
+			"key": "credit-transfer+sepa",
+			"ref": "RF18539007547034",
+			"credit_transfer": [
+				{
+					"iban": "FI2112345600000785",
+					"bic": "NDEAFIHH"
+				}
+			],
+			"ext": {
+				"untdid-payment-means": "58"
+			}
+		}
+	},
+	"totals": {
+		"sum": "300.00",
+		"total": "300.00",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"ext": {
+								"untdid-tax-category": "S"
+							},
+							"base": "100.00",
+							"percent": "25.5%",
+							"amount": "25.50"
+						},
+						{
+							"key": "exempt",
+							"ext": {
+								"cef-vatex": "VATEX-EU-132-1C",
+								"untdid-tax-category": "E"
+							},
+							"base": "200.00",
+							"amount": "0.00"
+						}
+					],
+					"amount": "25.50"
+				}
+			],
+			"sum": "25.50"
+		},
+		"tax": "25.50",
+		"total_with_tax": "325.50",
+		"payable": "325.50"
+	}
+}
