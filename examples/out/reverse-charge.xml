@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Finvoice Version="3.0">
+  <SellerPartyDetails>
+    <SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+    <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
+    <SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+    <SellerPostalAddressDetails>
+      <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+      <SellerTownName>Helsinki</SellerTownName>
+      <SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
+      <CountryCode>FI</CountryCode>
+    </SellerPostalAddressDetails>
+  </SellerPartyDetails>
+  <SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>
+  <BuyerPartyDetails>
+    <BuyerPartyIdentifier>HRB 12345</BuyerPartyIdentifier>
+    <BuyerOrganisationName>Beispiel GmbH</BuyerOrganisationName>
+    <BuyerOrganisationTaxCode>DE111111125</BuyerOrganisationTaxCode>
+    <BuyerPostalAddressDetails>
+      <BuyerStreetName>Musterstraße 5</BuyerStreetName>
+      <BuyerTownName>Berlin</BuyerTownName>
+      <BuyerPostCodeIdentifier>10115</BuyerPostCodeIdentifier>
+      <CountryCode>DE</CountryCode>
+    </BuyerPostalAddressDetails>
+  </BuyerPartyDetails>
+  <DeliveryPartyDetails>
+    <DeliveryOrganisationName>Beispiel Lager</DeliveryOrganisationName>
+    <DeliveryPostalAddressDetails>
+      <DeliveryStreetName>Lagerweg 9</DeliveryStreetName>
+      <DeliveryTownName>Potsdam</DeliveryTownName>
+      <DeliveryPostCodeIdentifier>14467</DeliveryPostCodeIdentifier>
+      <CountryCode>DE</CountryCode>
+    </DeliveryPostalAddressDetails>
+  </DeliveryPartyDetails>
+  <DeliveryDetails>
+    <DeliveryDate Format="CCYYMMDD">20260905</DeliveryDate>
+  </DeliveryDetails>
+  <InvoiceDetails>
+    <InvoiceTypeCode>INV01</InvoiceTypeCode>
+    <InvoiceTypeCodeUN>380</InvoiceTypeCodeUN>
+    <InvoiceTypeText>INVOICE</InvoiceTypeText>
+    <OriginCode>Original</OriginCode>
+    <InvoiceNumber>1003</InvoiceNumber>
+    <InvoiceDate Format="CCYYMMDD">20260912</InvoiceDate>
+    <InvoicingPeriodStartDate Format="CCYYMMDD">20260801</InvoicingPeriodStartDate>
+    <InvoicingPeriodEndDate Format="CCYYMMDD">20260831</InvoicingPeriodEndDate>
+    <RowsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">575,00</RowsTotalVatExcludedAmount>
+    <DiscountsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">11,50</DiscountsTotalVatExcludedAmount>
+    <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">563,50</InvoiceTotalVatExcludedAmount>
+    <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">0,00</InvoiceTotalVatAmount>
+    <InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">563,50</InvoiceTotalVatIncludedAmount>
+    <InvoicePaidAmount AmountCurrencyIdentifier="EUR">100,00</InvoicePaidAmount>
+    <VatSpecificationDetails>
+      <VatBaseAmount AmountCurrencyIdentifier="EUR">563,50</VatBaseAmount>
+      <VatCode>AE</VatCode>
+      <VatRateAmount AmountCurrencyIdentifier="EUR">0,00</VatRateAmount>
+      <VatFreeText>Käännetty verovelvollisuus, AVL 8 c §</VatFreeText>
+    </VatSpecificationDetails>
+    <PaymentTermsDetails>
+      <InvoiceDueDate Format="CCYYMMDD">20261012</InvoiceDueDate>
+    </PaymentTermsDetails>
+    <DiscountDetails>
+      <FreeText>Varhaismaksu</FreeText>
+      <Percent>2</Percent>
+      <Amount AmountCurrencyIdentifier="EUR">11,50</Amount>
+      <VatCategoryCode>AE</VatCategoryCode>
+    </DiscountDetails>
+  </InvoiceDetails>
+  <InvoiceRow>
+    <ArticleName>Asennuspalvelu</ArticleName>
+    <EanCode>6410000000012</EanCode>
+    <InvoicedQuantity QuantityUnitCode="one" QuantityUnitCodeUN="C62">3</InvoicedQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="one" QuantityUnitCodeUN="C62">200,00</UnitPriceAmount>
+    <RowPositionIdentifier>1</RowPositionIdentifier>
+    <RowFreeText>Asennus asiakkaan tiloissa</RowFreeText>
+    <RowDiscountPercent>5</RowDiscountPercent>
+    <RowDiscountAmount AmountCurrencyIdentifier="EUR">30,00</RowDiscountAmount>
+    <RowDiscountTypeText>Määräalennus</RowDiscountTypeText>
+    <RowProgressiveDiscountDetails>
+      <RowDiscountAmount AmountCurrencyIdentifier="EUR">10,00</RowDiscountAmount>
+      <RowDiscountTypeText>Kampanja</RowDiscountTypeText>
+    </RowProgressiveDiscountDetails>
+    <RowChargeDetails>
+      <ReasonText>Matkakulut</ReasonText>
+      <Amount AmountCurrencyIdentifier="EUR">15,00</Amount>
+    </RowChargeDetails>
+    <RowVatCode>AE</RowVatCode>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">575,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">575,00</RowAmount>
+  </InvoiceRow>
+  <EpiDetails>
+    <EpiIdentificationDetails>
+      <EpiDate Format="CCYYMMDD">20260912</EpiDate>
+      <EpiReference>1232</EpiReference>
+    </EpiIdentificationDetails>
+    <EpiPartyDetails>
+      <EpiBfiPartyDetails></EpiBfiPartyDetails>
+      <EpiBeneficiaryPartyDetails>
+        <EpiNameAddressDetails>Myyjä Oy</EpiNameAddressDetails>
+        <EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+      </EpiBeneficiaryPartyDetails>
+    </EpiPartyDetails>
+    <EpiPaymentInstructionDetails>
+      <EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">1232</EpiRemittanceInfoIdentifier>
+      <EpiInstructedAmount AmountCurrencyIdentifier="EUR">463,50</EpiInstructedAmount>
+      <EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+      <EpiDateOptionDate Format="CCYYMMDD">20261012</EpiDateOptionDate>
+      <EpiPaymentMeansCode>30</EpiPaymentMeansCode>
+    </EpiPaymentInstructionDetails>
+  </EpiDetails>
+  <InvoiceUrlNameText>PDF</InvoiceUrlNameText>
+  <InvoiceUrlText>file://invoice.pdf</InvoiceUrlText>
+</Finvoice>

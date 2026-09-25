@@ -1,0 +1,101 @@
+$schema: "https://gobl.org/draft-0/bill/invoice"
+$regime: "FI"
+$addons:
+  - "fi-finvoice-v3"
+uuid: "3a4b1f4e-7b1c-4a1a-9c2e-0d5f6a7b8c9d"
+type: "standard"
+series: "2026"
+code: "1001"
+issue_date: "2026-09-01"
+currency: "EUR"
+supplier:
+  name: "Myyjä Oy"
+  tax_id:
+    country: "FI"
+    code: "23456780"
+  endpoints:
+    - uri: "iso6523-actorid-upis::0216:003723456780"
+  people:
+    - name:
+        given: "Maija"
+        surname: "Myyjä"
+  addresses:
+    - street: "Esimerkkikatu 1"
+      locality: "Helsinki"
+      code: "00100"
+      country: "FI"
+  emails:
+    - addr: "laskutus@myyja.example"
+  telephones:
+    - num: "+358 9 123 4567"
+  websites:
+    - url: "https://myyja.example"
+customer:
+  name: "Ostaja Oy"
+  tax_id:
+    country: "FI"
+    code: "01120389"
+  endpoints:
+    - uri: "iso6523-actorid-upis::0216:003701120389"
+  ext:
+    fi-finvoice-operator: "003723327487"
+  people:
+    - name:
+        given: "Olli"
+        surname: "Ostaja"
+  addresses:
+    - street: "Testitie 2"
+      street_extra: "3. kerros"
+      locality: "Espoo"
+      code: "02100"
+      country: "FI"
+  emails:
+    - addr: "ostot@ostaja.example"
+ordering:
+  code: "PROJ-42"
+  purchases:
+    - code: "PO-2026-77"
+      issue_date: "2026-08-20"
+lines:
+  - quantity: 10
+    item:
+      name: "Konsultointi"
+      price: "90.00"
+      unit: "h"
+    discounts:
+      - percent: "10%"
+        reason: "Sopimusalennus"
+    taxes:
+      - cat: VAT
+        rate: standard
+  - quantity: 2
+    item:
+      name: "Käsikirja"
+      ref: "BK-100"
+      price: "25.00"
+      unit: "item"
+    taxes:
+      - cat: VAT
+        rate: reduced
+charges:
+  - key: "delivery"
+    amount: "12.00"
+    reason: "Toimitus"
+    taxes:
+      - cat: VAT
+        rate: standard
+payment:
+  instructions:
+    key: "credit-transfer+sepa"
+    ref: "RF18539007547034"
+    credit_transfer:
+      - iban: "FI2112345600000785"
+        bic: "NDEAFIHH"
+  terms:
+    notes: "14 päivää netto"
+    due_dates:
+      - date: "2026-09-15"
+        percent: "100%"
+notes:
+  - key: "general"
+    text: "Kiitos tilauksestanne."

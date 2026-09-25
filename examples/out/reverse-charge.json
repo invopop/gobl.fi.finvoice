@@ -1,0 +1,227 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
+		"dig": {
+			"alg": "sha256",
+			"val": "8e09de1e750e6304e97398106420d96fe9fe3eac79881359776828a6dbaa2a46"
+		},
+		"from": "iso6523-actorid-upis::0216:003723456780"
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "FI",
+		"$addons": [
+			"eu-en16931-v2017",
+			"fi-finvoice-v3"
+		],
+		"uuid": "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+		"type": "standard",
+		"code": "1003",
+		"issue_date": "2026-09-12",
+		"currency": "EUR",
+		"tax": {
+			"ext": {
+				"untdid-document-type": "380"
+			},
+			"notes": [
+				{
+					"cat": "VAT",
+					"key": "reverse-charge",
+					"text": "Käännetty verovelvollisuus, AVL 8 c §",
+					"ext": {
+						"untdid-tax-category": "AE"
+					}
+				}
+			]
+		},
+		"supplier": {
+			"name": "Myyjä Oy",
+			"tax_id": {
+				"country": "FI",
+				"code": "23456780"
+			},
+			"endpoints": [
+				{
+					"uri": "iso6523-actorid-upis::0216:003723456780"
+				}
+			],
+			"addresses": [
+				{
+					"num": "1",
+					"street": "Esimerkkikatu",
+					"locality": "Helsinki",
+					"code": "00100",
+					"country": "FI"
+				}
+			]
+		},
+		"customer": {
+			"name": "Beispiel GmbH",
+			"tax_id": {
+				"country": "DE",
+				"code": "111111125"
+			},
+			"identities": [
+				{
+					"scope": "legal",
+					"code": "HRB 12345"
+				}
+			],
+			"addresses": [
+				{
+					"street": "Musterstraße 5",
+					"locality": "Berlin",
+					"code": "10115",
+					"country": "DE"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "3",
+				"item": {
+					"name": "Asennuspalvelu",
+					"identities": [
+						{
+							"key": "gtin",
+							"code": "6410000000012",
+							"ext": {
+								"iso-scheme-id": "0160"
+							}
+						}
+					],
+					"price": "200.00",
+					"unit": "one"
+				},
+				"sum": "600.00",
+				"discounts": [
+					{
+						"reason": "Määräalennus",
+						"percent": "5%",
+						"amount": "30.00"
+					},
+					{
+						"reason": "Kampanja",
+						"amount": "10.00"
+					}
+				],
+				"charges": [
+					{
+						"reason": "Matkakulut",
+						"amount": "15.00"
+					}
+				],
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "reverse-charge",
+						"ext": {
+							"untdid-tax-category": "AE"
+						}
+					}
+				],
+				"total": "575.00",
+				"notes": [
+					{
+						"text": "Asennus asiakkaan tiloissa"
+					}
+				]
+			}
+		],
+		"discounts": [
+			{
+				"i": 1,
+				"reason": "Varhaismaksu",
+				"percent": "2%",
+				"amount": "11.50",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "reverse-charge",
+						"ext": {
+							"untdid-tax-category": "AE"
+						}
+					}
+				]
+			}
+		],
+		"payment": {
+			"terms": {
+				"due_dates": [
+					{
+						"date": "2026-10-12",
+						"amount": "563.50",
+						"percent": "100%"
+					}
+				]
+			},
+			"advances": [
+				{
+					"description": "Ennakko",
+					"amount": "100.00"
+				}
+			],
+			"instructions": {
+				"key": "credit-transfer",
+				"ref": "1232",
+				"credit_transfer": [
+					{
+						"iban": "FI2112345600000785"
+					}
+				],
+				"ext": {
+					"untdid-payment-means": "30"
+				}
+			}
+		},
+		"delivery": {
+			"receiver": {
+				"name": "Beispiel Lager",
+				"addresses": [
+					{
+						"street": "Lagerweg 9",
+						"locality": "Potsdam",
+						"code": "14467",
+						"country": "DE"
+					}
+				]
+			},
+			"date": "2026-09-05",
+			"period": {
+				"start": "2026-08-01",
+				"end": "2026-08-31"
+			}
+		},
+		"totals": {
+			"sum": "575.00",
+			"discount": "11.50",
+			"total": "563.50",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "reverse-charge",
+								"ext": {
+									"untdid-tax-category": "AE"
+								},
+								"base": "563.50",
+								"amount": "0.00"
+							}
+						],
+						"amount": "0.00"
+					}
+				],
+				"sum": "0.00"
+			},
+			"tax": "0.00",
+			"total_with_tax": "563.50",
+			"payable": "563.50",
+			"advance": "100.00",
+			"due": "463.50"
+		}
+	}
+}

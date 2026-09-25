@@ -1,0 +1,92 @@
+$schema: "https://gobl.org/draft-0/bill/invoice"
+$regime: "FI"
+$addons:
+  - "fi-finvoice-v3"
+uuid: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f"
+type: "standard"
+code: "1003"
+issue_date: "2026-09-12"
+currency: "EUR"
+tax:
+  notes:
+    - cat: VAT
+      key: reverse-charge
+      text: "Käännetty verovelvollisuus, AVL 8 c §"
+supplier:
+  name: "Myyjä Oy"
+  tax_id:
+    country: "FI"
+    code: "23456780"
+  endpoints:
+    - uri: "iso6523-actorid-upis::0216:003723456780"
+  addresses:
+    - street: "Esimerkkikatu"
+      num: "1"
+      locality: "Helsinki"
+      code: "00100"
+      country: "FI"
+customer:
+  name: "Beispiel GmbH"
+  tax_id:
+    country: "DE"
+    code: "111111125"
+  identities:
+    - scope: "legal"
+      code: "HRB 12345"
+  addresses:
+    - street: "Musterstraße 5"
+      locality: "Berlin"
+      code: "10115"
+      country: "DE"
+delivery:
+  date: "2026-09-05"
+  period:
+    start: "2026-08-01"
+    end: "2026-08-31"
+  receiver:
+    name: "Beispiel Lager"
+    addresses:
+      - street: "Lagerweg 9"
+        locality: "Potsdam"
+        code: "14467"
+        country: "DE"
+lines:
+  - quantity: 3
+    item:
+      name: "Asennuspalvelu"
+      price: "200.00"
+      identities:
+        - key: "gtin"
+          code: "6410000000012"
+    discounts:
+      - percent: "5%"
+        reason: "Määräalennus"
+      - amount: "10.00"
+        reason: "Kampanja"
+    charges:
+      - amount: "15.00"
+        reason: "Matkakulut"
+    notes:
+      - text: "Asennus asiakkaan tiloissa"
+    taxes:
+      - cat: VAT
+        key: reverse-charge
+discounts:
+  - percent: "2%"
+    reason: "Varhaismaksu"
+    taxes:
+      - cat: VAT
+        key: reverse-charge
+payment:
+  instructions:
+    key: "credit-transfer"
+    ref: "1232"
+    credit_transfer:
+      - iban: "FI2112345600000785"
+  advances:
+    - amount: "100.00"
+      description: "Ennakko"
+  terms:
+    due_dates:
+      - date: "2026-10-12"
+        percent: "100%"

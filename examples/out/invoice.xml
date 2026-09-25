@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Finvoice Version="3.0">
+  <MessageTransmissionDetails>
+    <MessageSenderDetails>
+      <FromIdentifier SchemeID="0216">003723456780</FromIdentifier>
+      <FromIntermediator>003723327487</FromIntermediator>
+    </MessageSenderDetails>
+    <MessageReceiverDetails>
+      <ToIdentifier SchemeID="0216">003701120389</ToIdentifier>
+      <ToIntermediator>003723327487</ToIntermediator>
+    </MessageReceiverDetails>
+    <MessageDetails>
+      <MessageIdentifier>3a4b1f4e-7b1c-4a1a-9c2e-0d5f6a7b8c9d</MessageIdentifier>
+      <MessageTimeStamp>2026-09-01T08:30:00Z</MessageTimeStamp>
+      <SpecificationIdentifier>EN16931</SpecificationIdentifier>
+    </MessageDetails>
+  </MessageTransmissionDetails>
+  <SellerPartyDetails>
+    <SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+    <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
+    <SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+    <SellerPostalAddressDetails>
+      <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+      <SellerTownName>Helsinki</SellerTownName>
+      <SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
+      <CountryCode>FI</CountryCode>
+    </SellerPostalAddressDetails>
+  </SellerPartyDetails>
+  <SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>
+  <SellerContactPersonName>Maija Myyjä</SellerContactPersonName>
+  <SellerCommunicationDetails>
+    <SellerPhoneNumberIdentifier>+358 9 123 4567</SellerPhoneNumberIdentifier>
+    <SellerEmailaddressIdentifier>laskutus@myyja.example</SellerEmailaddressIdentifier>
+  </SellerCommunicationDetails>
+  <SellerInformationDetails>
+    <SellerWebaddressIdentifier>https://myyja.example</SellerWebaddressIdentifier>
+    <SellerAccountDetails>
+      <SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
+      <SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic>
+    </SellerAccountDetails>
+  </SellerInformationDetails>
+  <BuyerPartyDetails>
+    <BuyerPartyIdentifier>0112038-9</BuyerPartyIdentifier>
+    <BuyerOrganisationName>Ostaja Oy</BuyerOrganisationName>
+    <BuyerOrganisationTaxCode>FI01120389</BuyerOrganisationTaxCode>
+    <BuyerPostalAddressDetails>
+      <BuyerStreetName>Testitie 2</BuyerStreetName>
+      <BuyerStreetName>3. kerros</BuyerStreetName>
+      <BuyerTownName>Espoo</BuyerTownName>
+      <BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier>
+      <CountryCode>FI</CountryCode>
+    </BuyerPostalAddressDetails>
+  </BuyerPartyDetails>
+  <BuyerOrganisationUnitNumber>003701120389</BuyerOrganisationUnitNumber>
+  <BuyerContactPersonName>Olli Ostaja</BuyerContactPersonName>
+  <BuyerCommunicationDetails>
+    <BuyerEmailaddressIdentifier>ostot@ostaja.example</BuyerEmailaddressIdentifier>
+  </BuyerCommunicationDetails>
+  <InvoiceDetails>
+    <InvoiceTypeCode>INV01</InvoiceTypeCode>
+    <InvoiceTypeCodeUN>380</InvoiceTypeCodeUN>
+    <InvoiceTypeText>INVOICE</InvoiceTypeText>
+    <OriginCode>Original</OriginCode>
+    <InvoiceNumber>2026-1001</InvoiceNumber>
+    <InvoiceDate Format="CCYYMMDD">20260901</InvoiceDate>
+    <OrderIdentifier>PO-2026-77</OrderIdentifier>
+    <OrderDate Format="CCYYMMDD">20260820</OrderDate>
+    <BuyerReferenceIdentifier>PROJ-42</BuyerReferenceIdentifier>
+    <RowsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">860,00</RowsTotalVatExcludedAmount>
+    <ChargesTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">12,00</ChargesTotalVatExcludedAmount>
+    <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">872,00</InvoiceTotalVatExcludedAmount>
+    <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">216,36</InvoiceTotalVatAmount>
+    <InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">1088,36</InvoiceTotalVatIncludedAmount>
+    <VatSpecificationDetails>
+      <VatBaseAmount AmountCurrencyIdentifier="EUR">822,00</VatBaseAmount>
+      <VatRatePercent>25,5</VatRatePercent>
+      <VatCode>S</VatCode>
+      <VatRateAmount AmountCurrencyIdentifier="EUR">209,61</VatRateAmount>
+    </VatSpecificationDetails>
+    <VatSpecificationDetails>
+      <VatBaseAmount AmountCurrencyIdentifier="EUR">50,00</VatBaseAmount>
+      <VatRatePercent>13,5</VatRatePercent>
+      <VatCode>S</VatCode>
+      <VatRateAmount AmountCurrencyIdentifier="EUR">6,75</VatRateAmount>
+    </VatSpecificationDetails>
+    <InvoiceFreeText>Kiitos tilauksestanne.</InvoiceFreeText>
+    <PaymentTermsDetails>
+      <PaymentTermsFreeText>14 päivää netto</PaymentTermsFreeText>
+      <InvoiceDueDate Format="CCYYMMDD">20260915</InvoiceDueDate>
+    </PaymentTermsDetails>
+    <ChargeDetails>
+      <ReasonText>Toimitus</ReasonText>
+      <ReasonCode>DL</ReasonCode>
+      <Amount AmountCurrencyIdentifier="EUR">12,00</Amount>
+      <VatCategoryCode>S</VatCategoryCode>
+      <VatRatePercent>25,5</VatRatePercent>
+    </ChargeDetails>
+  </InvoiceDetails>
+  <InvoiceRow>
+    <ArticleName>Konsultointi</ArticleName>
+    <InvoicedQuantity QuantityUnitCode="h" QuantityUnitCodeUN="HUR">10</InvoicedQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="h" QuantityUnitCodeUN="HUR">90,00</UnitPriceAmount>
+    <RowPositionIdentifier>1</RowPositionIdentifier>
+    <RowDiscountPercent>10</RowDiscountPercent>
+    <RowDiscountAmount AmountCurrencyIdentifier="EUR">90,00</RowDiscountAmount>
+    <RowDiscountTypeText>Sopimusalennus</RowDiscountTypeText>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatCode>S</RowVatCode>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">206,55</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">810,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">1016,55</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>BK-100</ArticleIdentifier>
+    <ArticleName>Käsikirja</ArticleName>
+    <InvoicedQuantity QuantityUnitCode="item" QuantityUnitCodeUN="EA">2</InvoicedQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="item" QuantityUnitCodeUN="EA">25,00</UnitPriceAmount>
+    <RowPositionIdentifier>2</RowPositionIdentifier>
+    <RowVatRatePercent>13,5</RowVatRatePercent>
+    <RowVatCode>S</RowVatCode>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">6,75</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">50,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">56,75</RowAmount>
+  </InvoiceRow>
+  <EpiDetails>
+    <EpiIdentificationDetails>
+      <EpiDate Format="CCYYMMDD">20260901</EpiDate>
+      <EpiReference>RF18539007547034</EpiReference>
+    </EpiIdentificationDetails>
+    <EpiPartyDetails>
+      <EpiBfiPartyDetails>
+        <EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+      </EpiBfiPartyDetails>
+      <EpiBeneficiaryPartyDetails>
+        <EpiNameAddressDetails>Myyjä Oy</EpiNameAddressDetails>
+        <EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+      </EpiBeneficiaryPartyDetails>
+    </EpiPartyDetails>
+    <EpiPaymentInstructionDetails>
+      <EpiRemittanceInfoIdentifier IdentificationSchemeName="ISO">RF18539007547034</EpiRemittanceInfoIdentifier>
+      <EpiInstructedAmount AmountCurrencyIdentifier="EUR">1088,36</EpiInstructedAmount>
+      <EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+      <EpiDateOptionDate Format="CCYYMMDD">20260915</EpiDateOptionDate>
+      <EpiPaymentMeansCode>58</EpiPaymentMeansCode>
+    </EpiPaymentInstructionDetails>
+  </EpiDetails>
+  <InvoiceUrlNameText>PDF</InvoiceUrlNameText>
+  <InvoiceUrlText>file://invoice.pdf</InvoiceUrlText>
+</Finvoice>
