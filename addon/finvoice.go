@@ -46,6 +46,7 @@ func newAddon() *tax.AddonDef {
 		Requires: []cbc.Key{
 			en16931.V2017,
 		},
+		Extensions: extensions,
 		Description: i18n.String{
 			i18n.EN: here.Doc(`
 				Support for the Finnish Finvoice 3.0 format for electronic invoicing.
