@@ -1,7 +1,6 @@
 package fifinvoice
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -27,8 +26,6 @@ const (
 	emailMaxLength = 70
 	// websiteMaxLength bounds the seller's web address, left out when longer.
 	websiteMaxLength = 70
-	// identityMaxLength bounds a party's legal registration identifier.
-	identityMaxLength = 35
 )
 
 // businessID is a Finnish Y-tunnus: seven digits, a hyphen and a check digit.
@@ -140,16 +137,12 @@ type postalAddress struct {
 	postOfficeBox string
 }
 
-func (c *converter) newSeller() (*SellerPartyDetails, error) {
+func (c *converter) newSeller() *SellerPartyDetails {
 	p := c.inv.Supplier
-	id, err := newPartyIdentifier(p)
-	if err != nil {
-		return nil, err
-	}
 	s := &SellerPartyDetails{
-		Identifier:  id,
+		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, nameLines),
-		TradingName: fit(p.Alias, nameMaxLength),
+		TradingName: cut(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -162,19 +155,15 @@ func (c *converter) newSeller() (*SellerPartyDetails, error) {
 			PostOfficeBox: a.postOfficeBox,
 		}
 	}
-	return s, nil
+	return s
 }
 
-func (c *converter) newBuyer() (*BuyerPartyDetails, error) {
+func (c *converter) newBuyer() *BuyerPartyDetails {
 	p := c.inv.Customer
-	id, err := newPartyIdentifier(p)
-	if err != nil {
-		return nil, err
-	}
 	b := &BuyerPartyDetails{
-		Identifier:  id,
+		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, nameLines),
-		TradingName: fit(p.Alias, nameMaxLength),
+		TradingName: cut(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -187,27 +176,23 @@ func (c *converter) newBuyer() (*BuyerPartyDetails, error) {
 			PostOfficeBox: a.postOfficeBox,
 		}
 	}
-	return b, nil
+	return b
 }
 
 // newDeliveryParty writes the delivery receiver, which Finvoice only takes
-// with an address.
-func (c *converter) newDeliveryParty() (*DeliveryPartyDetails, error) {
+// with a name and an address.
+func (c *converter) newDeliveryParty() *DeliveryPartyDetails {
 	d := c.inv.Delivery
 	if d == nil || d.Receiver == nil {
-		return nil, nil
+		return nil
 	}
 	a := newPostalAddress(d.Receiver)
 	name := split(d.Receiver.Name, addressMaxLength, nameLines)
 	if a == nil || len(name) == 0 {
-		return nil, nil
-	}
-	id, err := newPartyIdentifier(d.Receiver)
-	if err != nil {
-		return nil, err
+		return nil
 	}
 	return &DeliveryPartyDetails{
-		Identifier: id,
+		Identifier: newPartyIdentifier(d.Receiver),
 		Name:       name,
 		TaxCode:    partyTaxCode(d.Receiver),
 		Address: &DeliveryPostalAddressDetails{
@@ -218,7 +203,7 @@ func (c *converter) newDeliveryParty() (*DeliveryPartyDetails, error) {
 			CountryCode:   a.countryCode,
 			PostOfficeBox: a.postOfficeBox,
 		},
-	}, nil
+	}
 }
 
 // applySellerDetails writes the seller elements that sit outside
@@ -262,20 +247,14 @@ func (c *converter) newSellerAccounts() []*SellerAccountDetails {
 	return out
 }
 
-// applyBuyerDetails writes the buyer elements outside BuyerPartyDetails. The
-// e-invoice address is what the document is routed by, so a customer
-// without one is refused.
-func (c *converter) applyBuyerDetails(doc *Document) error {
+// applyBuyerDetails writes the buyer elements outside BuyerPartyDetails.
+func (c *converter) applyBuyerDetails(doc *Document) {
 	p := c.inv.Customer
 	_, doc.BuyerOrganisationUnitNumber = partyAddress(p)
-	if doc.BuyerOrganisationUnitNumber == "" {
-		return fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003745678907", iso.ActorIDScheme)
-	}
 	doc.BuyerContactPersonName = contactName(p)
 	if phone, email := contactDetails(p); phone != "" || email != "" {
 		doc.BuyerCommunication = &BuyerCommunicationDetails{Phone: phone, Email: email}
 	}
-	return nil
 }
 
 func (c *converter) applyDelivery(doc *Document) {
@@ -295,28 +274,24 @@ func (c *converter) applyDelivery(doc *Document) {
 // newPartyIdentifier writes the party's legal registration: the Y-tunnus
 // for a Finnish party, else its first legal-scope identity with the ISO 6523
 // scheme the EN 16931 addon records on it.
-func newPartyIdentifier(p *org.Party) (*Identifier, error) {
+func newPartyIdentifier(p *org.Party) *Identifier {
 	if p == nil {
-		return nil, nil
+		return nil
 	}
 	if p.TaxID != nil && p.TaxID.Country == l10n.FI.Tax() {
 		if m := businessID.FindStringSubmatch(p.TaxID.Code.String()); m != nil {
-			return &Identifier{Value: m[1] + "-" + m[2]}, nil
+			return &Identifier{Value: m[1] + "-" + m[2]}
 		}
 	}
 	for _, id := range p.Identities {
 		if id != nil && id.Scope == org.IdentityScopeLegal && id.Code != "" {
-			code, err := identifier("legal identity", id.Code.String(), identityMaxLength)
-			if err != nil {
-				return nil, err
-			}
 			return &Identifier{
-				Value:    code,
+				Value:    id.Code.String(),
 				SchemeID: id.Ext.Get(iso.ExtKeySchemeID).String(),
-			}, nil
+			}
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 // partyTaxCode is the VAT number: country code plus the tax identity code.
@@ -327,22 +302,22 @@ func partyTaxCode(p *org.Party) string {
 	return p.TaxID.String()
 }
 
-// newPostalAddress writes the first address, left out when the town or post
-// code Finvoice requires is missing or too short.
+// newPostalAddress writes the first address, left out when it lacks the town
+// or post code Finvoice requires.
 func newPostalAddress(p *org.Party) *postalAddress {
 	if p == nil || len(p.Addresses) == 0 || p.Addresses[0] == nil {
 		return nil
 	}
 	a := p.Addresses[0]
-	if a.Locality == "" || a.Code == "" || tooShort(a.Locality) || tooShort(a.Code.String()) {
+	if a.Locality == "" || a.Code == "" {
 		return nil
 	}
 	out := &postalAddress{
 		townName:      cut(a.Locality, addressMaxLength),
 		postCode:      cut(a.Code.String(), addressMaxLength),
-		subdivision:   fit(a.Region, addressMaxLength),
+		subdivision:   cut(a.Region, addressMaxLength),
 		countryCode:   a.Country.String(),
-		postOfficeBox: fit(a.PostOfficeBox, addressMaxLength),
+		postOfficeBox: cut(a.PostOfficeBox, addressMaxLength),
 	}
 	street := strings.TrimSpace(a.Street + " " + a.Number)
 	out.streetName = split(street, addressMaxLength, streetLines)

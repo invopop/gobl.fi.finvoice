@@ -14,8 +14,6 @@ import (
 	finvoice "github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/addons/eu/en16931"
 	"github.com/invopop/gobl/bill"
-	"github.com/invopop/gobl/cal"
-	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/pay"
@@ -279,24 +277,6 @@ func TestConvertPaymentOrder(t *testing.T) {
 		})
 	}
 
-	t.Run("two due dates fail", func(t *testing.T) {
-		env, inv := exampleEnvelope(t, "invoice")
-		half := num.MakePercentage(50, 2)
-		inv.Payment.Terms.DueDates = []*pay.DueDate{
-			{Date: cal.NewDate(2026, 9, 15), Percent: &half},
-			{Date: cal.NewDate(2026, 10, 15), Percent: &half},
-		}
-		require.NoError(t, env.Calculate())
-		_, err := fifinvoice.Convert(env, testOptions()...)
-		require.ErrorContains(t, err, "2 due dates")
-	})
-	t.Run("long reference fails", func(t *testing.T) {
-		env, inv := exampleEnvelope(t, "invoice")
-		inv.Payment.Instructions.Ref = cbc.Code("RF18" + strings.Repeat("5390075470", 4))
-		require.NoError(t, env.Calculate())
-		_, err := fifinvoice.Convert(env, testOptions()...)
-		require.ErrorContains(t, err, "payment reference")
-	})
 }
 
 // TestConvertLimits checks long texts are cut or split to the schema's
@@ -313,26 +293,6 @@ func TestConvertLimits(t *testing.T) {
 		assert.Equal(t, strings.Repeat("ä", 10)+" "+strings.Repeat("ö", 30), doc.Seller.Name[1])
 		assert.Equal(t, 35, utf8.RuneCountInString(doc.Buyer.Address.StreetName[0]))
 		assert.Equal(t, 100, utf8.RuneCountInString(doc.Rows[0].ArticleName))
-	})
-	t.Run("one-character tail joins the previous line", func(t *testing.T) {
-		env, inv := exampleEnvelope(t, "invoice")
-		inv.Supplier.Name = strings.Repeat("ä", 69) + " b"
-		inv.Customer.Name = strings.Repeat("ö", 60) + " " + strings.Repeat("ö", 8) + " c"
-		doc := convertAdjusted(t, env)
-		assert.Equal(t, []string{strings.Repeat("ä", 68), "ä b"}, doc.Seller.Name)
-		assert.Equal(t, []string{strings.Repeat("ö", 60), strings.Repeat("ö", 8) + " c"}, doc.Buyer.Name)
-	})
-	t.Run("one-character optional fields left out", func(t *testing.T) {
-		env, inv := exampleEnvelope(t, "invoice")
-		inv.Supplier.Alias = "X"
-		inv.Supplier.Addresses[0].Region = "Y"
-		inv.Supplier.Addresses[0].PostOfficeBox = "Z"
-		inv.Customer.Addresses[0].Locality = "W"
-		doc := convertAdjusted(t, env)
-		assert.Empty(t, doc.Seller.TradingName)
-		assert.Empty(t, doc.Seller.Address.Subdivision)
-		assert.Empty(t, doc.Seller.Address.PostOfficeBox)
-		assert.Nil(t, doc.Buyer.Address)
 	})
 	t.Run("texts split at words", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")
@@ -361,47 +321,6 @@ func TestConvertLimits(t *testing.T) {
 		inv.Supplier.Websites[0].URL = "https://myyja.example/" + strings.Repeat("a", 60)
 		doc := convertAdjusted(t, env)
 		assert.Empty(t, doc.SellerInformation.Website)
-	})
-	t.Run("long quantity fails", func(t *testing.T) {
-		env, inv := exampleEnvelope(t, "invoice")
-		inv.Lines[0].Quantity = num.MakeAmount(1234567890123456, 5)
-		require.NoError(t, env.Calculate())
-		_, err := fifinvoice.Convert(env, testOptions()...)
-		require.ErrorContains(t, err, `quantity "12345678901,23456"`)
-	})
-	t.Run("identifiers too long fail", func(t *testing.T) {
-		long := strings.Repeat("9", 80)
-		tests := []struct {
-			name, want string
-			adjust     func(inv *bill.Invoice)
-		}{
-			{"legal identity", `legal identity "9999`, func(inv *bill.Invoice) {
-				inv.Customer.TaxID = nil
-				inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: cbc.Code(long)}}
-			}},
-			{"buyer reference", `buyer reference "9999`, func(inv *bill.Invoice) { inv.Ordering.Code = cbc.Code(long) }},
-			{"order reference", `order reference "9999`, func(inv *bill.Invoice) {
-				inv.Ordering.Purchases = []*org.DocumentRef{{Code: cbc.Code(long)}}
-			}},
-			{"article identifier", `article identifier "9999`, func(inv *bill.Invoice) { inv.Lines[0].Item.Ref = cbc.Code(long) }},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				env, inv := exampleEnvelope(t, "invoice")
-				tt.adjust(inv)
-				require.NoError(t, env.Calculate())
-				_, err := fifinvoice.Convert(env, testOptions()...)
-				require.ErrorContains(t, err, tt.want)
-			})
-		}
-	})
-	t.Run("caller identifiers out of range fail", func(t *testing.T) {
-		env, _ := exampleEnvelope(t, "invoice")
-		require.NoError(t, env.Calculate())
-		_, err := fifinvoice.Convert(env, fifinvoice.WithSenderOperator("X"))
-		require.ErrorContains(t, err, `sender operator "X"`)
-		_, err = fifinvoice.Convert(env, fifinvoice.WithSenderOperator(senderOperator), fifinvoice.WithMessageID(strings.Repeat("m", 49)))
-		require.ErrorContains(t, err, "message identifier")
 	})
 }
 

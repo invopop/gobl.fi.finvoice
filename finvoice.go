@@ -12,6 +12,7 @@ import (
 	"github.com/invopop/gobl"
 	finvoice "github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/catalogues/iso"
 	"github.com/invopop/gobl/currency"
 )
 
@@ -96,31 +97,11 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 		c.opts.messageID = inv.UUID.String()
 	}
 
+	// The customer's e-invoice address is what the document is routed by.
+	if _, code := partyAddress(inv.Customer); code == "" {
+		return nil, fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003745678907", iso.ActorIDScheme)
+	}
 	frame, err := c.newTransmission()
-	if err != nil {
-		return nil, err
-	}
-	details, err := c.newInvoiceDetails()
-	if err != nil {
-		return nil, err
-	}
-	epi, err := c.newEpiDetails()
-	if err != nil {
-		return nil, err
-	}
-	seller, err := c.newSeller()
-	if err != nil {
-		return nil, err
-	}
-	buyer, err := c.newBuyer()
-	if err != nil {
-		return nil, err
-	}
-	delivery, err := c.newDeliveryParty()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := c.newRows()
 	if err != nil {
 		return nil, err
 	}
@@ -128,17 +109,15 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 	doc := &Document{
 		Version:        Version,
 		Transmission:   frame,
-		Seller:         seller,
-		Buyer:          buyer,
-		DeliveryParty:  delivery,
-		InvoiceDetails: details,
-		Rows:           rows,
-		Epi:            epi,
+		Seller:         c.newSeller(),
+		Buyer:          c.newBuyer(),
+		DeliveryParty:  c.newDeliveryParty(),
+		InvoiceDetails: c.newInvoiceDetails(),
+		Rows:           c.newRows(),
+		Epi:            c.newEpiDetails(),
 	}
 	c.applySellerDetails(doc)
-	if err := c.applyBuyerDetails(doc); err != nil {
-		return nil, err
-	}
+	c.applyBuyerDetails(doc)
 	c.applyDelivery(doc)
 	for _, u := range c.opts.urls {
 		doc.InvoiceURLNames = append(doc.InvoiceURLNames, u.name)

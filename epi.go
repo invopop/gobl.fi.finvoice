@@ -1,7 +1,6 @@
 package fifinvoice
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/invopop/gobl/cal"
@@ -22,8 +21,6 @@ const (
 
 	// beneficiaryNameMaxLength bounds EpiNameAddressDetails.
 	beneficiaryNameMaxLength = 35
-	// referenceMaxLengthEpi bounds EpiReference; a reference is never cut.
-	referenceMaxLengthEpi = 35
 )
 
 var (
@@ -85,17 +82,10 @@ type EpiCharge struct {
 // newEpiDetails builds the payment order from the payment instructions the
 // addon requires: the first credit transfer account, the reference and the
 // one due date.
-func (c *converter) newEpiDetails() (*EpiDetails, error) {
+func (c *converter) newEpiDetails() *EpiDetails {
 	p := c.inv.Payment
 	instr := p.Instructions
 	ct := instr.CreditTransfer[0]
-	if tooLong(instr.Ref.String(), referenceMaxLengthEpi) {
-		return nil, fmt.Errorf("payment reference %q is longer than the %d characters Finvoice allows", instr.Ref, referenceMaxLengthEpi)
-	}
-	due, err := dueDate(p.Terms)
-	if err != nil {
-		return nil, err
-	}
 	payee := c.inv.Supplier
 	if p.Payee != nil {
 		payee = p.Payee
@@ -123,7 +113,7 @@ func (c *converter) newEpiDetails() (*EpiDetails, error) {
 				Currency: c.cur.String(),
 			},
 			Charge:           EpiCharge{Value: charge, Option: charge},
-			DateOptionDate:   newDate(due),
+			DateOptionDate:   newDate(*firstDueDate(p.Terms)),
 			PaymentMeansCode: instr.Ext.Get(untdid.ExtKeyPaymentMeans).String(),
 		},
 	}
@@ -131,7 +121,7 @@ func (c *converter) newEpiDetails() (*EpiDetails, error) {
 		epi.Party.BFI.Identifier = &Account{Value: ct.BIC.String(), Scheme: schemeBIC}
 		epi.Party.BFI.Name = cut(ct.Name, beneficiaryNameMaxLength)
 	}
-	return epi, nil
+	return epi
 }
 
 // instructedAmount is what remains to be paid: the amount due, or the
@@ -165,22 +155,6 @@ func newRemittanceInfo(instr *pay.Instructions) *Account {
 		return &Account{Value: ref, Scheme: referenceSchemeSPY}
 	}
 	return nil
-}
-
-// dueDate is the payment order's one date. Finvoice pays the whole amount
-// on it, so instalments over several dates cannot be expressed and are
-// refused.
-func dueDate(terms *pay.Terms) (cal.Date, error) {
-	var dates []cal.Date
-	for _, dd := range terms.DueDates {
-		if dd != nil && dd.Date != nil {
-			dates = append(dates, *dd.Date)
-		}
-	}
-	if len(dates) > 1 {
-		return cal.Date{}, fmt.Errorf("payment terms have %d due dates, Finvoice carries one", len(dates))
-	}
-	return dates[0], nil
 }
 
 // firstDueDate is the due date the payment terms name, if any.

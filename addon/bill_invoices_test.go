@@ -1,12 +1,14 @@
 package finvoice_test
 
 import (
+	"strings"
 	"testing"
 
 	_ "github.com/invopop/gobl"
 	finvoice "github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/currency"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
@@ -127,24 +129,6 @@ func TestBillInvoiceRules(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		err := rules.Validate(inv)
 		assert.ErrorContains(t, err, "customer name is required")
-	})
-
-	t.Run("one-character names", func(t *testing.T) {
-		inv := testInvoiceStandard(t)
-		inv.Supplier.Name = "A"
-		inv.Customer.Name = "B"
-		require.NoError(t, inv.Calculate())
-		err := rules.Validate(inv)
-		assert.ErrorContains(t, err, "supplier name must be at least two characters")
-		assert.ErrorContains(t, err, "customer name must be at least two characters")
-	})
-
-	t.Run("one-character payee name", func(t *testing.T) {
-		inv := testInvoiceStandard(t)
-		inv.Payment.Payee = &org.Party{Name: "P"}
-		require.NoError(t, inv.Calculate())
-		err := rules.Validate(inv)
-		assert.ErrorContains(t, err, "payee name must be at least two characters")
 	})
 
 	t.Run("missing payment", func(t *testing.T) {
@@ -315,4 +299,50 @@ func TestNormalization(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		assert.Equal(t, "RF18539007547034", inv.Payment.Instructions.Ref.String())
 	})
+}
+
+// TestFinvoiceLimits covers the values Finvoice cannot hold, which the addon
+// refuses before a converter would have to cut them.
+func TestFinvoiceLimits(t *testing.T) {
+	long := strings.Repeat("9", 80)
+	tests := []struct {
+		name   string
+		adjust func(inv *bill.Invoice)
+		want   string
+	}{
+		{"invoice number with its series", func(inv *bill.Invoice) {
+			inv.Series = "MYYNTI-2026-HELSINKI"
+		}, "invoice number with its series must be at most 20 characters"},
+		{"preceding document number", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Preceding = []*org.DocumentRef{{Series: "MYYNTI-2026-HELSINKI", Code: "1000", IssueDate: cal.NewDate(2026, 6, 1)}}
+		}, "preceding document number must be at most 20 characters"},
+		{"ordering reference", func(inv *bill.Invoice) {
+			inv.Ordering = &bill.Ordering{Purchases: []*org.DocumentRef{{Code: cbc.Code(long)}}}
+		}, "ordering references must be at most 70 characters"},
+		{"item reference", func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Ref = cbc.Code(long)
+		}, "item reference must be at most 70 characters"},
+		{"legal identity", func(inv *bill.Invoice) {
+			inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: cbc.Code(long)}}
+		}, "legal identity code must be at most 35 characters"},
+		{"payment reference", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.Ref = cbc.Code("RF18" + strings.Repeat("5390075470", 4))
+		}, "payment reference must be at most 35 characters"},
+		{"instalments", func(inv *bill.Invoice) {
+			half := num.MakePercentage(50, 2)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{
+				{Date: cal.NewDate(2026, 7, 15), Percent: &half},
+				{Date: cal.NewDate(2026, 7, 31), Percent: &half},
+			}
+		}, "only one due date is supported"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inv := testInvoiceStandard(t)
+			tt.adjust(inv)
+			require.NoError(t, inv.Calculate())
+			assert.ErrorContains(t, rules.Validate(inv), tt.want)
+		})
+	}
 }

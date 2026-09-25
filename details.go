@@ -1,8 +1,6 @@
 package fifinvoice
 
 import (
-	"fmt"
-
 	"github.com/invopop/gobl/addons/eu/en16931"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/catalogues/cef"
@@ -43,11 +41,6 @@ const (
 	// vatFreeTextMaxLength bounds each VatFreeText, of which there may be three.
 	vatFreeTextMaxLength = 70
 	vatFreeTextLines     = 3
-	// referenceMaxLength bounds the order, agreement and buyer references.
-	referenceMaxLength = 70
-	// invoiceNumberMaxLength bounds InvoiceNumber and the original invoice
-	// numbers; an identifier is never cut, so a longer one is refused.
-	invoiceNumberMaxLength = 20
 )
 
 // InvoiceDetails holds the document header: type, numbers, dates,
@@ -141,27 +134,19 @@ type ChargeDetails struct {
 	VatRatePercent  string  `xml:"VatRatePercent,omitempty"`
 }
 
-func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
+func (c *converter) newInvoiceDetails() *InvoiceDetails {
 	inv := c.inv
-	number, err := invoiceNumber(inv.Series, inv.Code)
-	if err != nil {
-		return nil, err
-	}
 	code, text := invoiceType(inv)
 	d := &InvoiceDetails{
 		TypeCode:      InvoiceTypeCode{Value: code, CodeList: typeCodeList},
 		TypeCodeUN:    inv.Tax.Ext.Get(untdid.ExtKeyDocumentType).String(),
 		TypeText:      text,
 		OriginCode:    originOriginal,
-		InvoiceNumber: number,
+		InvoiceNumber: inv.Series.Join(inv.Code).String(),
 		InvoiceDate:   newDate(inv.IssueDate),
 	}
-	if err := c.applyPreceding(d); err != nil {
-		return nil, err
-	}
-	if err := c.applyOrdering(d); err != nil {
-		return nil, err
-	}
+	c.applyPreceding(d)
+	c.applyOrdering(d)
 	c.applyTotals(d)
 	d.VatSpecifications = c.newVatSpecifications()
 	for _, n := range inv.Notes {
@@ -172,12 +157,7 @@ func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
 	d.PaymentTerms = c.newPaymentTerms()
 	d.Discounts = c.newDiscounts()
 	d.Charges = c.newCharges()
-	return d, nil
-}
-
-// invoiceNumber joins the series and code into the document's one number.
-func invoiceNumber(series, code cbc.Code) (string, error) {
-	return identifier("invoice number", series.Join(code).String(), invoiceNumberMaxLength)
+	return d
 }
 
 // invoiceType maps the GOBL type to the Finvoice code and its English text.
@@ -194,15 +174,12 @@ func invoiceType(inv *bill.Invoice) (code, text string) {
 	}
 }
 
-func (c *converter) applyPreceding(d *InvoiceDetails) error {
+func (c *converter) applyPreceding(d *InvoiceDetails) {
 	for i, ref := range c.inv.Preceding {
 		if ref == nil {
 			continue
 		}
-		number, err := invoiceNumber(ref.Series, ref.Code)
-		if err != nil {
-			return fmt.Errorf("preceding document: %w", err)
-		}
+		number := ref.Series.Join(ref.Code).String()
 		if i == 0 {
 			d.OriginalInvoiceNumber = number
 			d.OriginalInvoiceDate = newDatePtr(ref.IssueDate)
@@ -213,13 +190,12 @@ func (c *converter) applyPreceding(d *InvoiceDetails) error {
 			InvoiceDate:   newDatePtr(ref.IssueDate),
 		})
 	}
-	return nil
 }
 
-func (c *converter) applyOrdering(d *InvoiceDetails) error {
+func (c *converter) applyOrdering(d *InvoiceDetails) {
 	o := c.inv.Ordering
 	if o == nil {
-		return nil
+		return
 	}
 	if o.Period != nil {
 		d.PeriodStartDate = newDatePtr(o.Period.Start)
@@ -228,26 +204,12 @@ func (c *converter) applyOrdering(d *InvoiceDetails) error {
 	if ref := firstDocumentRef(o.Purchases); ref != nil {
 		d.OrderDate = newDatePtr(ref.IssueDate)
 	}
-	refs := []struct {
-		name string
-		code cbc.Code
-		dst  *string
-	}{
-		{"buyer reference", o.Code, &d.BuyerReference},
-		{"sales reference", documentRefCode(o.Sales), &d.SellerReference},
-		{"order reference", documentRefCode(o.Purchases), &d.OrderIdentifier},
-		{"agreement reference", documentRefCode(o.Contracts), &d.AgreementIdentifier},
-		{"project reference", documentRefCode(o.Projects), &d.ProjectReference},
-		{"tender reference", documentRefCode(o.Tender), &d.TenderReference},
-	}
-	for _, ref := range refs {
-		s, err := identifier(ref.name, ref.code.String(), referenceMaxLength)
-		if err != nil {
-			return err
-		}
-		*ref.dst = s
-	}
-	return nil
+	d.BuyerReference = o.Code.String()
+	d.SellerReference = documentRefCode(o.Sales).String()
+	d.OrderIdentifier = documentRefCode(o.Purchases).String()
+	d.AgreementIdentifier = documentRefCode(o.Contracts).String()
+	d.ProjectReference = documentRefCode(o.Projects).String()
+	d.TenderReference = documentRefCode(o.Tender).String()
 }
 
 // documentRefCode is the full number of the first reference, if any.

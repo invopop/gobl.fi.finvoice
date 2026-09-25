@@ -12,12 +12,8 @@ import (
 const (
 	// articleNameMaxLength bounds ArticleName.
 	articleNameMaxLength = 100
-	// articleIdentifierMaxLength bounds ArticleIdentifier.
-	articleIdentifierMaxLength = 70
 	// unitCodeMaxLength bounds the free-text unit.
 	unitCodeMaxLength = 14
-	// quantityMaxLength bounds a quantity as written.
-	quantityMaxLength = 14
 	// discountTextMaxLength bounds RowDiscountTypeText.
 	discountTextMaxLength = 35
 )
@@ -77,39 +73,27 @@ type RowChargeDetails struct {
 	BaseAmount *Amount `xml:"BaseAmount,omitempty"`
 }
 
-func (c *converter) newRows() ([]*InvoiceRow, error) {
+func (c *converter) newRows() []*InvoiceRow {
 	var rows []*InvoiceRow
 	for _, line := range c.inv.Lines {
 		if line == nil || line.Item == nil {
 			continue
 		}
-		row, err := c.newRow(line)
-		if err != nil {
-			return nil, err
-		}
-		rows = append(rows, row)
+		rows = append(rows, c.newRow(line))
 	}
-	return rows, nil
+	return rows
 }
 
 // newRow writes a line without its VAT amount, since GOBL works the tax out
 // per rate and per-row amounts would not add up to the breakdown.
-func (c *converter) newRow(line *bill.Line) (*InvoiceRow, error) {
+func (c *converter) newRow(line *bill.Line) *InvoiceRow {
 	item := line.Item
-	ref, err := identifier("article identifier", item.Ref.String(), articleIdentifierMaxLength)
-	if err != nil {
-		return nil, err
-	}
-	quantity, err := c.newQuantity(line.Quantity, item)
-	if err != nil {
-		return nil, err
-	}
 	row := &InvoiceRow{
-		ArticleIdentifier:     ref,
+		ArticleIdentifier:     item.Ref.String(),
 		ArticleName:           cut(item.Name, articleNameMaxLength),
 		ArticleDescription:    cut(item.Description, freeTextMaxLength),
 		EANCode:               itemEAN(item),
-		InvoicedQuantity:      []*Quantity{quantity},
+		InvoicedQuantity:      []*Quantity{c.newQuantity(line.Quantity, item)},
 		RowPositionIdentifier: strconv.Itoa(line.Index),
 	}
 	if item.Price != nil {
@@ -142,21 +126,17 @@ func (c *converter) newRow(line *bill.Line) (*InvoiceRow, error) {
 		row.VatCode = vatCategory(vat.Ext)
 		row.VatRatePercent = vatRatePercent(vat.Ext, vat.Percent)
 	}
-	return row, nil
+	return row
 }
 
 // newQuantity writes the quantity with the GOBL unit as free text and its
 // UN/ECE code; negated on a credit note.
-func (c *converter) newQuantity(q num.Amount, item *org.Item) (*Quantity, error) {
-	value, err := identifier("quantity", formatQuantity(c.signed(q)), quantityMaxLength)
-	if err != nil {
-		return nil, err
-	}
+func (c *converter) newQuantity(q num.Amount, item *org.Item) *Quantity {
 	return &Quantity{
-		Value:      value,
+		Value:      formatQuantity(c.signed(q)),
 		UnitCode:   cut(item.Unit.String(), unitCodeMaxLength),
 		UnitCodeUN: unitCodeUN(item),
-	}, nil
+	}
 }
 
 // unitCodeUN is the UN/ECE code for the item's unit: the one its GOBL key
