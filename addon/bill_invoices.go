@@ -8,6 +8,9 @@ import (
 	"github.com/invopop/gobl/rules/is"
 )
 
+// minNameLength is the schema's minimum for an organisation name.
+const minNameLength = 2
+
 // Finvoice's EpiDetails payment block is mandatory on every invoice,
 // including credit notes, so the payment rules below apply unconditionally
 // rather than only when an amount is due (en16931 BR-CO-25).
@@ -17,10 +20,20 @@ import (
 // recommends but does not require it.
 func billInvoiceRules() *rules.Set {
 	return rules.For(new(bill.Invoice),
+		rules.Field("supplier",
+			rules.Field("name",
+				rules.Assert("13", "supplier name must be at least two characters (Finvoice SellerOrganisationName)",
+					is.RuneLength(minNameLength, 0),
+				),
+			),
+		),
 		rules.Field("customer",
 			rules.Assert("01", "customer is required (Finvoice BuyerPartyDetails)", is.Present),
 			rules.Field("name",
 				rules.Assert("02", "customer name is required (Finvoice BuyerOrganisationName)", is.Present),
+				rules.Assert("14", "customer name must be at least two characters (Finvoice BuyerOrganisationName)",
+					is.RuneLength(minNameLength, 0),
+				),
 			),
 		),
 		rules.Field("payment",

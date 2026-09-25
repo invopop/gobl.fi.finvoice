@@ -4,9 +4,9 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "32e5e6ba88aed4f30f8e91c9a0bd30caf0bc636d2d71ccc119b8dc4675836093"
+			"val": "45a8b1b6563edc9b018bb97618bd025bc07b7036870fcedd44e3207e9f365d9a"
 		},
-		"from": "iso6523-actorid-upis::0216:003723456780",
+		"from": "iso6523-actorid-upis::0216:003776543212",
 		"to": "iso6523-actorid-upis::9930:DE111111125"
 	},
 	"doc": {
@@ -40,11 +40,11 @@
 			"name": "Myyjä Oy",
 			"tax_id": {
 				"country": "FI",
-				"code": "23456780"
+				"code": "76543212"
 			},
 			"endpoints": [
 				{
-					"uri": "iso6523-actorid-upis::0216:003723456780"
+					"uri": "iso6523-actorid-upis::0216:003776543212"
 				}
 			],
 			"addresses": [

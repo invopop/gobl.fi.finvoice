@@ -32,7 +32,7 @@ var extensions = []*cbc.Definition{
 				"customer": {
 					"name": "Ostaja Oy",
 					"endpoints": [
-						{ "uri": "iso6523-actorid-upis::0216:003701120389" }
+						{ "uri": "iso6523-actorid-upis::0216:003745678907" }
 					],
 					"ext": {
 						"fi-finvoice-operator": "003700010001"

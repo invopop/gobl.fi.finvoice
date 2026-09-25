@@ -207,10 +207,8 @@ func (p *parser) charges() ([]*bill.Charge, error) {
 	return out, nil
 }
 
-// vatCombo builds the VAT tax for a row, discount or charge from its
-// category code and rate. Without a code the VAT breakdown names the
-// category for that rate, and failing that a positive rate is standard-rated
-// and zero is zero-rated.
+// vatCombo builds the VAT tax for a row, discount or charge, taking the
+// category from the breakdown line at the same rate when the row names none.
 func (p *parser) vatCombo(code, percent string) (*tax.Combo, error) {
 	pct, err := p.percent(percent)
 	if err != nil {

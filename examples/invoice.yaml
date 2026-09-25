@@ -12,9 +12,9 @@ supplier:
   name: "Myyjä Oy"
   tax_id:
     country: "FI"
-    code: "23456780"
+    code: "76543212"
   endpoints:
-    - uri: "iso6523-actorid-upis::0216:003723456780"
+    - uri: "iso6523-actorid-upis::0216:003776543212"
   people:
     - name:
         given: "Maija"
@@ -34,9 +34,9 @@ customer:
   name: "Ostaja Oy"
   tax_id:
     country: "FI"
-    code: "01120389"
+    code: "45678907"
   endpoints:
-    - uri: "iso6523-actorid-upis::0216:003701120389"
+    - uri: "iso6523-actorid-upis::0216:003745678907"
   ext:
     fi-finvoice-operator: "003700020002"
   people:

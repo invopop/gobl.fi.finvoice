@@ -145,10 +145,9 @@ func (p *parser) line(row *InvoiceRow, position int) (*bill.Line, error) {
 	return line, nil
 }
 
-// applyPrice sets the unit price. The row total is the authority (the
-// guidelines add the totals up from it): the price is read per its base
-// quantity, and when the quantity times that price still misses the row
-// total, the price the row total implies is used instead.
+// applyPrice sets the unit price, taking the one the row total implies when
+// the stated price does not reproduce it, since the guidelines add the
+// totals up from the row total.
 func (p *parser) applyPrice(line *bill.Line, row *InvoiceRow) error {
 	stated, err := p.amount(row.VatExcludedAmount)
 	if err != nil {
@@ -193,7 +192,7 @@ func (p *parser) applyPrice(line *bill.Line, row *InvoiceRow) error {
 // lineTotal is what GOBL will calculate for the line: quantity times price,
 // less discounts, plus charges, at the currency's precision.
 func (p *parser) lineTotal(line *bill.Line) num.Amount {
-	// The price keeps the precision: a quantity has none to spare.
+	// Multiplying from the price keeps its precision.
 	sum := line.Item.Price.Multiply(line.Quantity)
 	total := sum
 	for _, d := range line.Discounts {
@@ -213,9 +212,9 @@ func (p *parser) lineTotal(line *bill.Line) num.Amount {
 	return total.Rescale(p.cur.Def().Subunits)
 }
 
-// applyUnit sets the item's unit from the UN/ECE code when GOBL knows it,
-// else from the free-text unit when it is a GOBL unit key or a Finnish word
-// for one; any other UN/ECE code is kept in the unit extension.
+// applyUnit sets the item's unit from the UN/ECE code, else from the
+// free-text unit, keeping a UN/ECE code GOBL has no key for in the unit
+// extension.
 func applyUnit(item *org.Item, code, codeUN string) {
 	codeUN = strings.TrimSpace(codeUN)
 	if codeUN != "" {

@@ -54,10 +54,10 @@ const (
 // references, totals, VAT breakdown, terms, and document-level discounts and
 // charges.
 type InvoiceDetails struct {
-	TypeCode   TypeCode `xml:"InvoiceTypeCode"`
-	TypeCodeUN string   `xml:"InvoiceTypeCodeUN,omitempty"`
-	TypeText   string   `xml:"InvoiceTypeText"`
-	OriginCode string   `xml:"OriginCode"`
+	TypeCode   InvoiceTypeCode `xml:"InvoiceTypeCode"`
+	TypeCodeUN string          `xml:"InvoiceTypeCodeUN,omitempty"`
+	TypeText   string          `xml:"InvoiceTypeText"`
+	OriginCode string          `xml:"OriginCode"`
 
 	InvoiceNumber            string                      `xml:"InvoiceNumber"`
 	InvoiceDate              *Date                       `xml:"InvoiceDate"`
@@ -91,8 +91,8 @@ type InvoiceDetails struct {
 	TenderReference   string                     `xml:"TenderReference,omitempty"`
 }
 
-// TypeCode is the Finvoice invoice type code with its code list.
-type TypeCode struct {
+// InvoiceTypeCode is the Finvoice invoice type code with its code list.
+type InvoiceTypeCode struct {
 	Value    string `xml:",chardata"`
 	CodeList string `xml:"CodeListAgencyIdentifier,attr,omitempty"`
 }
@@ -149,7 +149,7 @@ func (c *converter) newInvoiceDetails() (*InvoiceDetails, error) {
 	}
 	code, text := invoiceType(inv)
 	d := &InvoiceDetails{
-		TypeCode:      TypeCode{Value: code, CodeList: typeCodeList},
+		TypeCode:      InvoiceTypeCode{Value: code, CodeList: typeCodeList},
 		TypeCodeUN:    inv.Tax.Ext.Get(untdid.ExtKeyDocumentType).String(),
 		TypeText:      text,
 		OriginCode:    originOriginal,

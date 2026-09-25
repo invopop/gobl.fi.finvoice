@@ -2,7 +2,7 @@
 <SOAP-ENV:Header>
 <eb:MessageHeader xmlns:eb="http://www.oasis-open.org/committees/ebxml-msg/schema/msg-header-2_0.xsd" SOAP-ENV:mustUnderstand="1" eb:id="20260922133003285">
 <eb:From>
-<eb:PartyId>003723456780</eb:PartyId>
+<eb:PartyId>003776543212</eb:PartyId>
 <eb:Role>Sender</eb:Role>
 </eb:From>
 <eb:From>
@@ -10,7 +10,7 @@
 <eb:Role>Intermediator</eb:Role>
 </eb:From>
 <eb:To>
-<eb:PartyId>003701120389</eb:PartyId>
+<eb:PartyId>003745678907</eb:PartyId>
 <eb:Role>Receiver</eb:Role>
 </eb:To>
 <eb:To>
@@ -41,11 +41,11 @@
 <Finvoice Version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Finvoice3.0.xsd">
 <MessageTransmissionDetails>
 <MessageSenderDetails>
-<FromIdentifier>003723456780</FromIdentifier>
+<FromIdentifier>003776543212</FromIdentifier>
 <FromIntermediator>NDEAFIHH</FromIntermediator>
 </MessageSenderDetails>
 <MessageReceiverDetails>
-<ToIdentifier>003701120389</ToIdentifier>
+<ToIdentifier>003745678907</ToIdentifier>
 <ToIntermediator>003700020002</ToIntermediator>
 </MessageReceiverDetails>
 <MessageDetails>
@@ -54,9 +54,9 @@
 </MessageDetails>
 </MessageTransmissionDetails>
 <SellerPartyDetails>
-<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
 <SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>
-<SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+<SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
 <SellerPostalAddressDetails>
 <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
 <SellerTownName>Helsinki</SellerTownName>
@@ -69,9 +69,9 @@
 <SellerEmailaddressIdentifier>laskutus@lahettaja.example</SellerEmailaddressIdentifier>
 </SellerCommunicationDetails>
 <BuyerPartyDetails>
-<BuyerPartyIdentifier>0112038-9</BuyerPartyIdentifier>
+<BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
 <BuyerOrganisationName>Vastaanottaja Oy</BuyerOrganisationName>
-<BuyerOrganisationTaxCode>FI01120389</BuyerOrganisationTaxCode>
+<BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
 <BuyerPostalAddressDetails>
 <BuyerStreetName>Testitie 2</BuyerStreetName>
 <BuyerTownName>Espoo</BuyerTownName>

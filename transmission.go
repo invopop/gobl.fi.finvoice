@@ -54,11 +54,11 @@ func (c *converter) newTransmission() (*MessageTransmissionDetails, error) {
 	}
 	from := newAddressIdentifier(c.inv.Supplier)
 	if from == nil {
-		return nil, fmt.Errorf("supplier needs an e-invoice address as an endpoint, such as %s::0216:003723456780", iso.ActorIDScheme)
+		return nil, fmt.Errorf("supplier needs an e-invoice address as an endpoint, such as %s::0216:003776543212", iso.ActorIDScheme)
 	}
 	to := newAddressIdentifier(customer)
 	if to == nil {
-		return nil, fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003701120389", iso.ActorIDScheme)
+		return nil, fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003745678907", iso.ActorIDScheme)
 	}
 	return &MessageTransmissionDetails{
 		Sender: MessageSenderDetails{

@@ -16,14 +16,15 @@ const (
 	dateFormat  = "CCYYMMDD"
 	dateLayout  = "20060102"
 	decimalMark = ","
+	// minTextLength is the shortest text most Finvoice string elements take.
+	minTextLength = 2
 
 	// amountMinExp and amountMaxExp bound the decimals of a Finvoice amount:
 	// two to five, per the monetaryAmount pattern.
 	amountMinExp uint32 = 2
 	amountMaxExp uint32 = 5
 	// percentMinExp and percentMaxExp bound the decimals of a percentage:
-	// one to three, per the guidelines, which a num.Percentage of exponent
-	// three to five renders with.
+	// one to three, which num.Percentage renders from exponents three to five.
 	percentMinExp uint32 = 3
 	percentMaxExp uint32 = 5
 )
@@ -150,6 +151,12 @@ func tooLong(s string, n int) bool {
 	return utf8.RuneCountInString(s) > n
 }
 
+// tooShort reports whether s has text but not the two characters most
+// Finvoice text elements require.
+func tooShort(s string) bool {
+	return s != "" && utf8.RuneCountInString(s) < minTextLength
+}
+
 // cut trims s to at most n characters, for the display texts Finvoice caps
 // and cannot repeat.
 func cut(s string, n int) string {
@@ -157,6 +164,14 @@ func cut(s string, n int) string {
 		return s
 	}
 	return string([]rune(s)[:n])
+}
+
+// fit is cut for an optional element, left out when s is too short for it.
+func fit(s string, n int) string {
+	if tooShort(s) {
+		return ""
+	}
+	return cut(s, n)
 }
 
 // split breaks s into pieces of at most n characters at word boundaries
@@ -167,16 +182,28 @@ func split(s string, n, limit int) []string {
 	rest := strings.TrimSpace(s)
 	for rest != "" && len(out) < limit {
 		if !tooLong(rest, n) {
-			out = append(out, rest)
+			if !tooShort(rest) {
+				out = append(out, rest)
+			}
 			break
 		}
 		r := []rune(rest)
-		end := n
-		if i := strings.LastIndex(string(r[:n+1]), " "); i > 0 {
-			end = utf8.RuneCountInString(string(r[:n+1])[:i])
+		end := wordBoundary(r, n)
+		if tooShort(strings.TrimSpace(string(r[end:]))) {
+			end = wordBoundary(r[:end], end-1)
 		}
 		out = append(out, strings.TrimSpace(string(r[:end])))
 		rest = strings.TrimSpace(string(r[end:]))
 	}
 	return out
+}
+
+// wordBoundary is the last space within the first n runes of r, or n when
+// there is none.
+func wordBoundary(r []rune, n int) int {
+	head := string(r[:n+1])
+	if i := strings.LastIndex(head, " "); i > 0 {
+		return utf8.RuneCountInString(head[:i])
+	}
+	return n
 }

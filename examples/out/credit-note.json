@@ -4,10 +4,10 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "876fef3b320539ff577b89fb3b9753063f71a0dc1562b6a1f221548774cd037d"
+			"val": "ba10ffce41089903cc3700f7ce97830ad09ae8585793bf5ce8c28fc66d9c0de5"
 		},
-		"from": "iso6523-actorid-upis::0216:003723456780",
-		"to": "iso6523-actorid-upis::0216:003701120389"
+		"from": "iso6523-actorid-upis::0216:003776543212",
+		"to": "iso6523-actorid-upis::0216:003745678907"
 	},
 	"doc": {
 		"$schema": "https://gobl.org/draft-0/bill/invoice",
@@ -38,11 +38,11 @@
 			"name": "Myyjä Oy",
 			"tax_id": {
 				"country": "FI",
-				"code": "23456780"
+				"code": "76543212"
 			},
 			"endpoints": [
 				{
-					"uri": "iso6523-actorid-upis::0216:003723456780"
+					"uri": "iso6523-actorid-upis::0216:003776543212"
 				}
 			],
 			"addresses": [
@@ -58,11 +58,11 @@
 			"name": "Ostaja Oy",
 			"tax_id": {
 				"country": "FI",
-				"code": "01120389"
+				"code": "45678907"
 			},
 			"endpoints": [
 				{
-					"uri": "iso6523-actorid-upis::0216:003701120389"
+					"uri": "iso6523-actorid-upis::0216:003745678907"
 				}
 			],
 			"addresses": [

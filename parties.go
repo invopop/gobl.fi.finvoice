@@ -141,7 +141,7 @@ func (c *converter) newSeller() *SellerPartyDetails {
 	s := &SellerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, nameLines),
-		TradingName: cut(p.Alias, nameMaxLength),
+		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -162,7 +162,7 @@ func (c *converter) newBuyer() *BuyerPartyDetails {
 	b := &BuyerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, nameLines),
-		TradingName: cut(p.Alias, nameMaxLength),
+		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -186,12 +186,13 @@ func (c *converter) newDeliveryParty() *DeliveryPartyDetails {
 		return nil
 	}
 	a := newPostalAddress(d.Receiver)
-	if a == nil {
+	name := split(d.Receiver.Name, addressMaxLength, nameLines)
+	if a == nil || len(name) == 0 {
 		return nil
 	}
 	return &DeliveryPartyDetails{
 		Identifier: newPartyIdentifier(d.Receiver),
-		Name:       split(d.Receiver.Name, addressMaxLength, nameLines),
+		Name:       name,
 		TaxCode:    partyTaxCode(d.Receiver),
 		Address: &DeliveryPostalAddressDetails{
 			StreetName:    a.streetName,
@@ -252,7 +253,7 @@ func (c *converter) applyBuyerDetails(doc *Document) error {
 	p := c.inv.Customer
 	_, doc.BuyerOrganisationUnitNumber = partyAddress(p)
 	if doc.BuyerOrganisationUnitNumber == "" {
-		return fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003701120389", iso.ActorIDScheme)
+		return fmt.Errorf("customer needs an e-invoice address as an endpoint, such as %s::0216:003745678907", iso.ActorIDScheme)
 	}
 	doc.BuyerContactPersonName = contactName(p)
 	if phone, email := contactDetails(p); phone != "" || email != "" {
@@ -306,23 +307,22 @@ func partyTaxCode(p *org.Party) string {
 	return p.TaxID.String()
 }
 
-// newPostalAddress writes the first address, which Finvoice only takes with
-// a street, a town and a post code; an address missing one of them is left
-// out rather than filled in.
+// newPostalAddress writes the first address, left out when the town or post
+// code Finvoice requires is missing or too short.
 func newPostalAddress(p *org.Party) *postalAddress {
 	if p == nil || len(p.Addresses) == 0 || p.Addresses[0] == nil {
 		return nil
 	}
 	a := p.Addresses[0]
-	if a.Locality == "" || a.Code == "" {
+	if a.Locality == "" || a.Code == "" || tooShort(a.Locality) || tooShort(a.Code.String()) {
 		return nil
 	}
 	out := &postalAddress{
 		townName:      cut(a.Locality, addressMaxLength),
 		postCode:      cut(a.Code.String(), addressMaxLength),
-		subdivision:   cut(a.Region, addressMaxLength),
+		subdivision:   fit(a.Region, addressMaxLength),
 		countryCode:   a.Country.String(),
-		postOfficeBox: cut(a.PostOfficeBox, addressMaxLength),
+		postOfficeBox: fit(a.PostOfficeBox, addressMaxLength),
 	}
 	street := strings.TrimSpace(a.Street + " " + a.Number)
 	out.streetName = split(street, addressMaxLength, streetLines)
@@ -331,7 +331,7 @@ func newPostalAddress(p *org.Party) *postalAddress {
 	}
 	if len(out.streetName) == 0 {
 		// A street line is required; the PO box or town stands in.
-		out.streetName = []string{cut(firstNonEmpty(a.PostOfficeBox, a.Locality), addressMaxLength)}
+		out.streetName = []string{firstNonEmpty(out.postOfficeBox, out.townName)}
 	}
 	return out
 }

@@ -32,7 +32,7 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 			Name: "Myyjä Oy",
 			TaxID: &tax.Identity{
 				Country: "FI",
-				Code:    "23456780",
+				Code:    "76543212",
 			},
 			Addresses: []*org.Address{
 				{
@@ -47,7 +47,7 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 			Name: "Ostaja Oy",
 			TaxID: &tax.Identity{
 				Country: "FI",
-				Code:    "01120389",
+				Code:    "45678907",
 			},
 			Addresses: []*org.Address{
 				{
@@ -127,6 +127,16 @@ func TestBillInvoiceRules(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		err := rules.Validate(inv)
 		assert.ErrorContains(t, err, "customer name is required")
+	})
+
+	t.Run("one-character names", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = "A"
+		inv.Customer.Name = "B"
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier name must be at least two characters")
+		assert.ErrorContains(t, err, "customer name must be at least two characters")
 	})
 
 	t.Run("missing payment", func(t *testing.T) {

@@ -86,8 +86,8 @@ func (c *converter) newRows() []*InvoiceRow {
 	return rows
 }
 
-// newRow writes a line. The row's VAT amount is left to the breakdown: GOBL
-// works the tax out per rate, so per-row amounts would not add up to it.
+// newRow writes a line without its VAT amount, since GOBL works the tax out
+// per rate and per-row amounts would not add up to the breakdown.
 func (c *converter) newRow(line *bill.Line) *InvoiceRow {
 	item := line.Item
 	row := &InvoiceRow{
@@ -97,7 +97,6 @@ func (c *converter) newRow(line *bill.Line) *InvoiceRow {
 		EANCode:               itemEAN(item),
 		InvoicedQuantity:      []*Quantity{c.newQuantity(line.Quantity, item)},
 		RowPositionIdentifier: strconv.Itoa(line.Index),
-		StartDate:             nil,
 	}
 	if item.Price != nil {
 		// GOBL's price is the net unit price (BT-146); with no item-level

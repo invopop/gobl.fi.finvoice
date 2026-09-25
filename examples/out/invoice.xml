@@ -2,11 +2,11 @@
 <Finvoice Version="3.0">
   <MessageTransmissionDetails>
     <MessageSenderDetails>
-      <FromIdentifier SchemeID="0216">003723456780</FromIdentifier>
+      <FromIdentifier SchemeID="0216">003776543212</FromIdentifier>
       <FromIntermediator>003700010001</FromIntermediator>
     </MessageSenderDetails>
     <MessageReceiverDetails>
-      <ToIdentifier SchemeID="0216">003701120389</ToIdentifier>
+      <ToIdentifier SchemeID="0216">003745678907</ToIdentifier>
       <ToIntermediator>003700020002</ToIntermediator>
     </MessageReceiverDetails>
     <MessageDetails>
@@ -16,9 +16,9 @@
     </MessageDetails>
   </MessageTransmissionDetails>
   <SellerPartyDetails>
-    <SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+    <SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
     <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
-    <SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+    <SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
     <SellerPostalAddressDetails>
       <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
       <SellerTownName>Helsinki</SellerTownName>
@@ -26,7 +26,7 @@
       <CountryCode>FI</CountryCode>
     </SellerPostalAddressDetails>
   </SellerPartyDetails>
-  <SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>
+  <SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>
   <SellerContactPersonName>Maija Myyjä</SellerContactPersonName>
   <SellerCommunicationDetails>
     <SellerPhoneNumberIdentifier>+358 9 123 4567</SellerPhoneNumberIdentifier>
@@ -40,9 +40,9 @@
     </SellerAccountDetails>
   </SellerInformationDetails>
   <BuyerPartyDetails>
-    <BuyerPartyIdentifier>0112038-9</BuyerPartyIdentifier>
+    <BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
     <BuyerOrganisationName>Ostaja Oy</BuyerOrganisationName>
-    <BuyerOrganisationTaxCode>FI01120389</BuyerOrganisationTaxCode>
+    <BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
     <BuyerPostalAddressDetails>
       <BuyerStreetName>Testitie 2</BuyerStreetName>
       <BuyerStreetName>3. kerros</BuyerStreetName>
@@ -51,7 +51,7 @@
       <CountryCode>FI</CountryCode>
     </BuyerPostalAddressDetails>
   </BuyerPartyDetails>
-  <BuyerOrganisationUnitNumber>003701120389</BuyerOrganisationUnitNumber>
+  <BuyerOrganisationUnitNumber>003745678907</BuyerOrganisationUnitNumber>
   <BuyerContactPersonName>Olli Ostaja</BuyerContactPersonName>
   <BuyerCommunicationDetails>
     <BuyerEmailaddressIdentifier>ostot@ostaja.example</BuyerEmailaddressIdentifier>

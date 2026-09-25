@@ -179,8 +179,11 @@ func (d *Document) goblInvoice() (*bill.Invoice, error) {
 	if det.TotalVatIncludedAmount == nil {
 		return nil, errors.New("document has no InvoiceTotalVatIncludedAmount")
 	}
-	if det.TotalVatIncludedAmount.Currency != "" {
-		p.cur = currency.Code(det.TotalVatIncludedAmount.Currency)
+	if cur := det.TotalVatIncludedAmount.Currency; cur != "" {
+		p.cur = currency.Code(cur)
+		if p.cur.Def() == nil {
+			return nil, fmt.Errorf("unknown currency %q", cur)
+		}
 	}
 	stated, err := parseAmount(det.TotalVatIncludedAmount.Value)
 	if err != nil {

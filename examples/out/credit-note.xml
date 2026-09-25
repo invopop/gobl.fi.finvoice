@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Finvoice Version="3.0">
   <SellerPartyDetails>
-    <SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>
+    <SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
     <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
-    <SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>
+    <SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
     <SellerPostalAddressDetails>
       <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
       <SellerTownName>Helsinki</SellerTownName>
@@ -11,7 +11,7 @@
       <CountryCode>FI</CountryCode>
     </SellerPostalAddressDetails>
   </SellerPartyDetails>
-  <SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>
+  <SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>
   <SellerInformationDetails>
     <SellerAccountDetails>
       <SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
@@ -19,9 +19,9 @@
     </SellerAccountDetails>
   </SellerInformationDetails>
   <BuyerPartyDetails>
-    <BuyerPartyIdentifier>0112038-9</BuyerPartyIdentifier>
+    <BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
     <BuyerOrganisationName>Ostaja Oy</BuyerOrganisationName>
-    <BuyerOrganisationTaxCode>FI01120389</BuyerOrganisationTaxCode>
+    <BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
     <BuyerPostalAddressDetails>
       <BuyerStreetName>Testitie 2</BuyerStreetName>
       <BuyerTownName>Espoo</BuyerTownName>
@@ -29,7 +29,7 @@
       <CountryCode>FI</CountryCode>
     </BuyerPostalAddressDetails>
   </BuyerPartyDetails>
-  <BuyerOrganisationUnitNumber>003701120389</BuyerOrganisationUnitNumber>
+  <BuyerOrganisationUnitNumber>003745678907</BuyerOrganisationUnitNumber>
   <InvoiceDetails>
     <InvoiceTypeCode CodeListAgencyIdentifier="SPY">INV02</InvoiceTypeCode>
     <InvoiceTypeCodeUN>381</InvoiceTypeCodeUN>

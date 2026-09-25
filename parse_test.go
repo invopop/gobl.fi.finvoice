@@ -82,11 +82,11 @@ func TestParseFramelessDelivery(t *testing.T) {
 	assert.Equal(t, bill.InvoiceTypeStandard, inv.Type)
 	assert.Equal(t, cbc.Code("00044"), inv.Code)
 	assert.Equal(t, "FI", inv.Supplier.TaxID.Country.String())
-	assert.Equal(t, cbc.Code("23456780"), inv.Supplier.TaxID.Code)
+	assert.Equal(t, cbc.Code("76543212"), inv.Supplier.TaxID.Code)
 	assert.Empty(t, inv.Supplier.Identities, "the Y-tunnus is the VAT number's own identity")
 	assert.Equal(t, "Lähettäjä Oy", inv.Supplier.Name)
-	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003723456780"), inv.Supplier.Endpoints[0].URI)
-	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003701120389"), inv.Customer.Endpoints[0].URI)
+	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003776543212"), inv.Supplier.Endpoints[0].URI)
+	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003745678907"), inv.Customer.Endpoints[0].URI)
 	assert.Empty(t, inv.Supplier.Ext.Get(finvoice.ExtKeyOperator))
 	assert.Empty(t, inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
 
@@ -112,9 +112,9 @@ func TestParseFramedMessage(t *testing.T) {
 	inv := parseFile(t, filepath.Join("test", "data", "parse", "soap-framed.xml"))
 
 	assert.Equal(t, "Lähettäjä Oy", inv.Supplier.Name)
-	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003723456780"), inv.Supplier.Endpoints[0].URI)
+	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003776543212"), inv.Supplier.Endpoints[0].URI)
 	assert.Equal(t, cbc.Code("NDEAFIHH"), inv.Supplier.Ext.Get(finvoice.ExtKeyOperator))
-	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003701120389"), inv.Customer.Endpoints[0].URI)
+	assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003745678907"), inv.Customer.Endpoints[0].URI)
 	assert.Equal(t, cbc.Code(receiverOperator), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
 	assert.Equal(t, "Hoitokäynti", inv.Lines[1].Item.Name)
 	assert.Equal(t, org.UnitHour, inv.Lines[0].Item.Unit)
@@ -159,8 +159,8 @@ func (d delivery) bytes() []byte {
 	}
 	return []byte(def(d.decl, `<?xml version="1.0" encoding="UTF-8"?>`) + `
 <Finvoice Version="1.3">` + d.frame + `
-<SellerPartyDetails>` + unless(d.noBusinessID, `<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>`) + `
-<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>` + unless(d.noVATNumber, `<SellerOrganisationTaxCode>FI23456780</SellerOrganisationTaxCode>`) + `
+<SellerPartyDetails>` + unless(d.noBusinessID, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>`) + `
+<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>` + unless(d.noVATNumber, `<SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>`) + `
 <SellerPostalAddressDetails><SellerStreetName>Esimerkkikatu 1</SellerStreetName><SellerTownName>Helsinki</SellerTownName><SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier><CountryCode>FI</CountryCode></SellerPostalAddressDetails>
 </SellerPartyDetails>` + d.sellerUnit + `
 <BuyerPartyDetails><BuyerOrganisationName>Vastaanottaja Oy</BuyerOrganisationName><BuyerPostalAddressDetails><BuyerStreetName>Testitie 2</BuyerStreetName><BuyerTownName>Espoo</BuyerTownName><BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier><CountryCode>FI</CountryCode></BuyerPostalAddressDetails></BuyerPartyDetails>
@@ -254,10 +254,10 @@ func TestParseCreditNoteSign(t *testing.T) {
 
 func TestParseAddresses(t *testing.T) {
 	tests := []struct{ name, unit, uri string }{
-		{"OVT", "003723456780", "iso6523-actorid-upis::0216:003723456780"},
-		{"OVT with a unit suffix", "003723456780AB1", "iso6523-actorid-upis::0216:003723456780AB1"},
+		{"OVT", "003776543212", "iso6523-actorid-upis::0216:003776543212"},
+		{"OVT with a unit suffix", "003776543212AB1", "iso6523-actorid-upis::0216:003776543212AB1"},
 		{"IBAN", "FI2112345600000785", "iso6523-actorid-upis::9918:FI2112345600000785"},
-		{"Y-tunnus", "2345678-0", "iso6523-actorid-upis::0212:2345678-0"},
+		{"Y-tunnus", "7654321-2", "iso6523-actorid-upis::0212:7654321-2"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -273,23 +273,23 @@ func TestParseAddresses(t *testing.T) {
 		assert.Equal(t, cbc.Code("LASKUT"), inv.Supplier.Inboxes[0].Code)
 	})
 	t.Run("frame wins over the unit number", func(t *testing.T) {
-		frame := `<MessageTransmissionDetails><MessageSenderDetails><FromIdentifier SchemeID="0216">003799999999</FromIdentifier><FromIntermediator>NDEAFIHH</FromIntermediator></MessageSenderDetails><MessageReceiverDetails><ToIdentifier>003701120389</ToIdentifier><ToIntermediator>` + receiverOperator + `</ToIntermediator></MessageReceiverDetails><MessageDetails><MessageIdentifier>1</MessageIdentifier><MessageTimeStamp>2026-09-22T11:12:12+03:00</MessageTimeStamp></MessageDetails></MessageTransmissionDetails>`
-		inv := parseDelivery(t, delivery{frame: frame, sellerUnit: "<SellerOrganisationUnitNumber>003723456780</SellerOrganisationUnitNumber>"})
+		frame := `<MessageTransmissionDetails><MessageSenderDetails><FromIdentifier SchemeID="0216">003799999999</FromIdentifier><FromIntermediator>NDEAFIHH</FromIntermediator></MessageSenderDetails><MessageReceiverDetails><ToIdentifier>003745678907</ToIdentifier><ToIntermediator>` + receiverOperator + `</ToIntermediator></MessageReceiverDetails><MessageDetails><MessageIdentifier>1</MessageIdentifier><MessageTimeStamp>2026-09-22T11:12:12+03:00</MessageTimeStamp></MessageDetails></MessageTransmissionDetails>`
+		inv := parseDelivery(t, delivery{frame: frame, sellerUnit: "<SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>"})
 		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003799999999"), inv.Supplier.Endpoints[0].URI)
 		assert.Equal(t, cbc.Code(receiverOperator), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
 	})
 	t.Run("a SOAP frame alone carries the routing", func(t *testing.T) {
 		soap := `<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:eb="http://www.oasis-open.org/committees/ebxml-msg/schema/msg-header-2_0.xsd"><SOAP-ENV:Header><eb:MessageHeader>
-<eb:From><eb:PartyId>003723456780</eb:PartyId><eb:Role>Sender</eb:Role></eb:From><eb:From><eb:PartyId>HELSFIHH</eb:PartyId><eb:Role>Intermediator</eb:Role></eb:From>
-<eb:To><eb:PartyId>003701120389</eb:PartyId><eb:Role>Receiver</eb:Role></eb:To><eb:To><eb:PartyId>` + receiverOperator + `</eb:PartyId><eb:Role>Intermediator</eb:Role></eb:To>
+<eb:From><eb:PartyId>003776543212</eb:PartyId><eb:Role>Sender</eb:Role></eb:From><eb:From><eb:PartyId>HELSFIHH</eb:PartyId><eb:Role>Intermediator</eb:Role></eb:From>
+<eb:To><eb:PartyId>003745678907</eb:PartyId><eb:Role>Receiver</eb:Role></eb:To><eb:To><eb:PartyId>` + receiverOperator + `</eb:PartyId><eb:Role>Intermediator</eb:Role></eb:To>
 </eb:MessageHeader></SOAP-ENV:Header><SOAP-ENV:Body/></SOAP-ENV:Envelope>
 `
 		env, err := fifinvoice.Parse(append([]byte(soap), delivery{}.bytes()...))
 		require.NoError(t, err)
 		inv := env.Extract().(*bill.Invoice)
-		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003723456780"), inv.Supplier.Endpoints[0].URI)
+		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003776543212"), inv.Supplier.Endpoints[0].URI)
 		assert.Equal(t, cbc.Code("HELSFIHH"), inv.Supplier.Ext.Get(finvoice.ExtKeyOperator))
-		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003701120389"), inv.Customer.Endpoints[0].URI)
+		assert.Equal(t, cbc.URI("iso6523-actorid-upis::0216:003745678907"), inv.Customer.Endpoints[0].URI)
 		assert.Equal(t, cbc.Code(receiverOperator), inv.Customer.Ext.Get(finvoice.ExtKeyOperator))
 	})
 }
@@ -299,16 +299,16 @@ func TestParseIdentities(t *testing.T) {
 		inv := parseDelivery(t, delivery{noVATNumber: true})
 		assert.Nil(t, inv.Supplier.TaxID)
 		require.Len(t, inv.Supplier.Identities, 1)
-		assert.Equal(t, cbc.Code("2345678-0"), inv.Supplier.Identities[0].Code)
+		assert.Equal(t, cbc.Code("7654321-2"), inv.Supplier.Identities[0].Code)
 		assert.Equal(t, cbc.Code("0212"), inv.Supplier.Identities[0].Ext.Get(iso.ExtKeySchemeID))
 		assert.Equal(t, "FI", inv.GetRegime().String())
 	})
 	t.Run("a Y-tunnus in the VAT field is no VAT number", func(t *testing.T) {
 		details := `<InvoiceTypeCode>INV01</InvoiceTypeCode><InvoiceTypeText>X</InvoiceTypeText><OriginCode>Original</OriginCode><InvoiceNumber>77</InvoiceNumber>`
 		d := delivery{details: details, noVATNumber: true}
-		data := strings.Replace(string(d.bytes()), `<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier>`, `<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier><SellerOrganisationTaxCode>2345678-0</SellerOrganisationTaxCode>`, 1)
+		data := strings.Replace(string(d.bytes()), `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>`, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, 1)
 		data = strings.Replace(data, `<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>`, ``, 1)
-		data = strings.Replace(data, `<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier><SellerOrganisationTaxCode>2345678-0</SellerOrganisationTaxCode>`, `<SellerPartyIdentifier>2345678-0</SellerPartyIdentifier><SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName><SellerOrganisationTaxCode>2345678-0</SellerOrganisationTaxCode>`, 1)
+		data = strings.Replace(data, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, `<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier><SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName><SellerOrganisationTaxCode>7654321-2</SellerOrganisationTaxCode>`, 1)
 		env, err := fifinvoice.Parse([]byte(data))
 		require.NoError(t, err)
 		inv := env.Extract().(*bill.Invoice)
@@ -426,6 +426,10 @@ func TestParseTotals(t *testing.T) {
 	t.Run("currency from the total", func(t *testing.T) {
 		inv := parseDelivery(t, delivery{currency: "SEK"})
 		assert.Equal(t, currency.SEK, inv.Currency)
+	})
+	t.Run("unknown currency is refused", func(t *testing.T) {
+		_, err := fifinvoice.Parse(delivery{currency: "XXX"}.bytes())
+		require.ErrorContains(t, err, `unknown currency "XXX"`)
 	})
 	t.Run("malformed dates are refused", func(t *testing.T) {
 		details := `<InvoiceTypeCode>INV01</InvoiceTypeCode><InvoiceTypeText>X</InvoiceTypeText><OriginCode>Original</OriginCode><InvoiceNumber>77</InvoiceNumber><OrderIdentifier>PO-1</OrderIdentifier><OrderDate Format="CCYYMMDD">2026-09-01</OrderDate>`

@@ -150,10 +150,10 @@ func TestConvertFrame(t *testing.T) {
 		doc, err := fifinvoice.Convert(env, testOptions()...)
 		require.NoError(t, err)
 		require.NotNil(t, doc.Transmission)
-		assert.Equal(t, "003723456780", doc.Transmission.Sender.Identifier.Value)
+		assert.Equal(t, "003776543212", doc.Transmission.Sender.Identifier.Value)
 		assert.Equal(t, "0216", doc.Transmission.Sender.Identifier.SchemeID)
 		assert.Equal(t, senderOperator, doc.Transmission.Sender.Intermediator)
-		assert.Equal(t, "003701120389", doc.Transmission.Receiver.Identifier.Value)
+		assert.Equal(t, "003745678907", doc.Transmission.Receiver.Identifier.Value)
 		assert.Equal(t, receiverOperator, doc.Transmission.Receiver.Intermediator)
 		assert.Equal(t, "3a4b1f4e-7b1c-4a1a-9c2e-0d5f6a7b8c9d", doc.Transmission.Message.Identifier)
 		assert.Equal(t, "2026-09-01T08:30:00Z", doc.Transmission.Message.Timestamp)
@@ -164,8 +164,8 @@ func TestConvertFrame(t *testing.T) {
 		inv.Customer.Ext = inv.Customer.Ext.Delete(finvoice.ExtKeyOperator)
 		doc := convertAdjusted(t, env)
 		assert.Nil(t, doc.Transmission)
-		assert.Equal(t, "003723456780", doc.SellerOrganisationUnitNumber)
-		assert.Equal(t, "003701120389", doc.BuyerOrganisationUnitNumber)
+		assert.Equal(t, "003776543212", doc.SellerOrganisationUnitNumber)
+		assert.Equal(t, "003745678907", doc.BuyerOrganisationUnitNumber)
 	})
 
 	t.Run("receiver operator without the sender's fails", func(t *testing.T) {
@@ -313,6 +313,26 @@ func TestConvertLimits(t *testing.T) {
 		assert.Equal(t, strings.Repeat("ä", 10)+" "+strings.Repeat("ö", 30), doc.Seller.Name[1])
 		assert.Equal(t, 35, utf8.RuneCountInString(doc.Buyer.Address.StreetName[0]))
 		assert.Equal(t, 100, utf8.RuneCountInString(doc.Rows[0].ArticleName))
+	})
+	t.Run("one-character tail joins the previous line", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Supplier.Name = strings.Repeat("ä", 69) + " b"
+		inv.Customer.Name = strings.Repeat("ö", 60) + " " + strings.Repeat("ö", 8) + " c"
+		doc := convertAdjusted(t, env)
+		assert.Equal(t, []string{strings.Repeat("ä", 68), "ä b"}, doc.Seller.Name)
+		assert.Equal(t, []string{strings.Repeat("ö", 60), strings.Repeat("ö", 8) + " c"}, doc.Buyer.Name)
+	})
+	t.Run("one-character optional fields left out", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Supplier.Alias = "X"
+		inv.Supplier.Addresses[0].Region = "Y"
+		inv.Supplier.Addresses[0].PostOfficeBox = "Z"
+		inv.Customer.Addresses[0].Locality = "W"
+		doc := convertAdjusted(t, env)
+		assert.Empty(t, doc.Seller.TradingName)
+		assert.Empty(t, doc.Seller.Address.Subdivision)
+		assert.Empty(t, doc.Seller.Address.PostOfficeBox)
+		assert.Nil(t, doc.Buyer.Address)
 	})
 	t.Run("texts split at words", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")

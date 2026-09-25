@@ -29,6 +29,8 @@ needed to build the `EpiDetails` payment block, which is mandatory on every
 Finvoice invoice, credit notes included:
 
 - **Customer**: must be present and named (`BuyerOrganisationName`).
+- **Names**: supplier and customer names need at least two characters, the
+  schema's minimum for an organisation name.
 - **Payment details**: required unconditionally, not only when an amount is
   due as in EN 16931 (BR-CO-25).
 - **Credit transfer**: payment instructions must use the `credit-transfer`
@@ -61,7 +63,7 @@ handling Finnish Finvoice documents take on its weight.
 `Convert` adds the addon to an invoice that does not declare it, validates the
 invoice, rounds it to the currency, and writes a Finvoice 3.0 document.
 Addresses come from the parties' ISO 6523 endpoints
-(`iso6523-actorid-upis::0216:003701120389` for an OVT code), the Y-tunnus and
+(`iso6523-actorid-upis::0216:003745678907` for an OVT code), the Y-tunnus and
 VAT number from the tax identity, and the payment order from the payment
 instructions the addon requires.
 
@@ -87,11 +89,13 @@ instructions the addon requires.
 - **Invoice type.** `InvoiceTypeCode` is `INV01`, `INV02`, `INV06` or
   `INV07` from the GOBL type and tags, and `InvoiceTypeCodeUN` the UNTDID
   1001 code the EN 16931 addon records.
-- **What the format cannot hold is refused, not cut.** An invoice number or
-  payment reference longer than its element, or payment terms with more than
-  one due date, return an error. Long names and texts are spread over the
-  repeats the schema allows, an email too long for its element is left out,
-  and a postal address without a town and post code is left out.
+- **Identifiers the format cannot hold are refused, not cut.** An invoice
+  number or payment reference longer than its element, or payment terms with
+  more than one due date, return an error. Long names and texts are spread
+  over the repeats the schema allows and cut beyond them. An email too long
+  for its element, an alias or region shorter than the two characters the
+  schema requires, and a postal address without a town and post code are
+  left out.
 - **Row VAT amounts are not written.** GOBL works the tax out per rate, so
   per-row VAT amounts would not add up to the breakdown; the optional
   `RowVatAmount` and `RowAmount` are left to it.
@@ -120,6 +124,8 @@ Windows-1252) is honoured. The result declares `fi-finvoice-v3`:
   the same rate; a breakdown with two categories at one rate cannot be told
   apart and is refused. Exemption reason codes become `cef-vatex` codes, and
   reason texts, on the breakdown or on the rows, become tax notes.
+- The currency comes from the total's currency identifier and must be one
+  GOBL knows; any other code is refused.
 - The stated total is kept: the roundoff amount is read, and a remaining
   difference with the calculated total of up to a subunit per row is recorded
   as rounding. A larger difference means the rows were misread and is refused.
@@ -155,16 +161,16 @@ supplier:
   name: "Myyjä Oy"
   tax_id:
     country: "FI"
-    code: "23456780"
+    code: "76543212"
   endpoints:
-    - uri: "iso6523-actorid-upis::0216:003723456780"
+    - uri: "iso6523-actorid-upis::0216:003776543212"
 customer:
   name: "Ostaja Oy"
   tax_id:
     country: "FI"
-    code: "01120389"
+    code: "45678907"
   endpoints:
-    - uri: "iso6523-actorid-upis::0216:003701120389"
+    - uri: "iso6523-actorid-upis::0216:003745678907"
   ext:
     fi-finvoice-operator: "003700020002"
 payment:
