@@ -6,6 +6,7 @@ require (
 	github.com/invopop/gobl v0.507.0
 	github.com/lestrrat-go/libxml2 v0.0.0-20240905100032-c934e3fcb9d3
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/text v0.38.0
 )
 
 require (
@@ -26,6 +27,5 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/text v0.38.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
