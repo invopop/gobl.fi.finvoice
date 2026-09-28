@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Finvoice Version="1.3">
+<SellerPartyDetails>
+<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
+<SellerOrganisationName>Lähettäjä Oy</SellerOrganisationName>
+<SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
+<SellerPostalAddressDetails>
+<SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+<SellerTownName>Helsinki</SellerTownName>
+<SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</SellerPostalAddressDetails>
+</SellerPartyDetails>
+<SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>
+<SellerInformationDetails>
+<SellerCommonEmailaddressIdentifier>laskutus@lahettaja.example</SellerCommonEmailaddressIdentifier>
+<SellerAccountDetails>
+<SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
+<SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic>
+</SellerAccountDetails>
+</SellerInformationDetails>
+<InvoiceRecipientLanguageCode>FI</InvoiceRecipientLanguageCode>
+<BuyerPartyDetails>
+<BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
+<BuyerOrganisationName>Vastaanottaja Oy</BuyerOrganisationName>
+<BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
+<BuyerPostalAddressDetails>
+<BuyerStreetName>Testitie 2</BuyerStreetName>
+<BuyerTownName>Espoo</BuyerTownName>
+<BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier>
+<CountryCode>FI</CountryCode>
+</BuyerPostalAddressDetails>
+</BuyerPartyDetails>
+<BuyerOrganisationUnitNumber>003745678907</BuyerOrganisationUnitNumber>
+<BuyerContactPersonName>Olli Ostaja</BuyerContactPersonName>
+<InvoiceDetails>
+<InvoiceTypeCode>INV01</InvoiceTypeCode>
+<InvoiceTypeText>LASKU</InvoiceTypeText>
+<OriginCode>Original</OriginCode>
+<InvoiceNumber>1042</InvoiceNumber>
+<InvoiceDate Format="CCYYMMDD">20260922</InvoiceDate>
+<SellersBuyerIdentifier>17</SellersBuyerIdentifier>
+<InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatExcludedAmount>
+<InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">0,00</InvoiceTotalVatAmount>
+<InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">1,00</InvoiceTotalVatIncludedAmount>
+<VatSpecificationDetails>
+<VatBaseAmount AmountCurrencyIdentifier="EUR">1,00</VatBaseAmount>
+<VatRatePercent>0,000</VatRatePercent>
+<VatCode>Z</VatCode>
+<VatRateAmount AmountCurrencyIdentifier="EUR">0,00</VatRateAmount>
+</VatSpecificationDetails>
+<InvoiceFreeText>testing e-invoicing</InvoiceFreeText>
+<PaymentTermsDetails>
+<PaymentTermsFreeText>30pv netto</PaymentTermsFreeText>
+<InvoiceDueDate Format="CCYYMMDD">20261022</InvoiceDueDate>
+<PaymentOverDueFineDetails>
+<PaymentOverDueFineFreeText>Viivästyskorko 11,50%</PaymentOverDueFineFreeText>
+<PaymentOverDueFinePercent>11,500</PaymentOverDueFinePercent>
+</PaymentOverDueFineDetails>
+</PaymentTermsDetails>
+</InvoiceDetails>
+<InvoiceRow>
+<ArticleIdentifier>11</ArticleIdentifier>
+<ArticleName>Kulut</ArticleName>
+<DeliveredQuantity QuantityUnitCode="h">1,00</DeliveredQuantity>
+<OrderedQuantity QuantityUnitCode="h">1,00</OrderedQuantity>
+<InvoicedQuantity QuantityUnitCode="h">1,00</InvoicedQuantity>
+<UnitPriceAmount AmountCurrencyIdentifier="EUR">1,00</UnitPriceAmount>
+<RowPositionIdentifier>1</RowPositionIdentifier>
+<RowFreeText>Laskutettavat kulut</RowFreeText>
+<RowVatRatePercent>0,000</RowVatRatePercent>
+<RowVatAmount AmountCurrencyIdentifier="EUR">0,00</RowVatAmount>
+<RowVatExcludedAmount AmountCurrencyIdentifier="EUR">1,00</RowVatExcludedAmount>
+<RowAmount AmountCurrencyIdentifier="EUR">1,00</RowAmount>
+</InvoiceRow>
+<EpiDetails>
+<EpiIdentificationDetails>
+<EpiDate Format="CCYYMMDD">20260922</EpiDate>
+<EpiReference>1042005</EpiReference>
+</EpiIdentificationDetails>
+<EpiPartyDetails>
+<EpiBfiPartyDetails>
+<EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+</EpiBfiPartyDetails>
+<EpiBeneficiaryPartyDetails>
+<EpiNameAddressDetails>Lähettäjä Oy</EpiNameAddressDetails>
+<EpiBei>7654321-2</EpiBei>
+<EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+</EpiBeneficiaryPartyDetails>
+</EpiPartyDetails>
+<EpiPaymentInstructionDetails>
+<EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">1042005</EpiRemittanceInfoIdentifier>
+<EpiInstructedAmount AmountCurrencyIdentifier="EUR">1,00</EpiInstructedAmount>
+<EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+<EpiDateOptionDate Format="CCYYMMDD">20261022</EpiDateOptionDate>
+</EpiPaymentInstructionDetails>
+</EpiDetails>
+<InvoiceUrlNameText>PDFFILE</InvoiceUrlNameText>
+<InvoiceUrlText>file://lasku-1042.PDF</InvoiceUrlText>
+</Finvoice>

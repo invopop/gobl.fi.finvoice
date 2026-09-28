@@ -70,6 +70,7 @@ type EpiBeneficiaryPartyDetails struct {
 // EpiPaymentInstructionDetails says what to pay, by when, and under which
 // reference.
 type EpiPaymentInstructionDetails struct {
+	InstructionCode          string               `xml:"EpiInstructionCode,omitempty"`
 	RemittanceInfoIdentifier *RemittanceReference `xml:"EpiRemittanceInfoIdentifier,omitempty"`
 	InstructedAmount         Amount               `xml:"EpiInstructedAmount"`
 	Charge                   EpiCharge            `xml:"EpiCharge"`
