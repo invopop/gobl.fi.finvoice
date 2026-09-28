@@ -1,11 +1,14 @@
 package addon
 
 import (
+	"fmt"
+
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/pay"
 	"github.com/invopop/gobl/rules"
 	"github.com/invopop/gobl/rules/is"
+	"github.com/invopop/gobl/tax"
 )
 
 // Finvoice's EpiDetails payment block is mandatory on every invoice,
@@ -17,10 +20,22 @@ import (
 // recommends but does not require it.
 func billInvoiceRules() *rules.Set {
 	return rules.For(new(bill.Invoice),
+		rules.Field("supplier",
+			rules.Field("ext",
+				rules.Assert("13", fmt.Sprintf("supplier '%s' extension must be 2 to 35 letters or digits", ExtKeyOperator),
+					tax.ExtensionHasValidCode(ExtKeyOperator),
+				),
+			),
+		),
 		rules.Field("customer",
 			rules.Assert("01", "customer is required (Finvoice BuyerPartyDetails)", is.Present),
 			rules.Field("name",
 				rules.Assert("02", "customer name is required (Finvoice BuyerOrganisationName)", is.Present),
+			),
+			rules.Field("ext",
+				rules.Assert("14", fmt.Sprintf("customer '%s' extension must be 2 to 35 letters or digits (Finvoice ToIntermediator)", ExtKeyOperator),
+					tax.ExtensionHasValidCode(ExtKeyOperator),
+				),
 			),
 		),
 		rules.Field("payment",
