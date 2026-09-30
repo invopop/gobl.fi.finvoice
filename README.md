@@ -35,6 +35,14 @@ mandatory on every Finvoice invoice, credit notes included:
 IBANs and payment references are normalized to their machine form: grouping
 spaces are removed and IBANs are upper-cased.
 
+An invoice gives each party one electronic address, and on a Finnish invoice
+that is the OVT (`iso6523-actorid-upis::0216:<OVT>`). When a supplier, customer
+or other party carries an OVT endpoint, the addon keeps the first one and drops
+the party's other `iso6523-actorid-upis` endpoints, so a party record that also
+holds a Business ID or GLN address still builds (EN 16931 `ORG-PARTY-04`).
+Endpoints with other schemes and inboxes are left alone, and parties without an
+OVT are not changed.
+
 Unlike the format converters in the GOBL ecosystem, this is a true **addon**:
 it registers validation rules and normalizers into GOBL's global registry. It
 lives in its own module so that only projects handling Finnish Finvoice
