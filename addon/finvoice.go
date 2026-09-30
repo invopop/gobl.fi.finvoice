@@ -1,4 +1,5 @@
-// Package addon provides validations for the Finnish Finvoice 3.0 format.
+// Package addon provides extensions and validations for the Finnish
+// Finvoice 3.0 format.
 package addon
 
 import (
@@ -50,12 +51,13 @@ func newAddon() *tax.AddonDef {
 		Extensions: extensions,
 		Description: i18n.String{
 			i18n.EN: here.Doc(`
-				Support for the Finnish Finvoice 3.0 format for electronic invoicing.
-				Finvoice conforms to the European Norm (EN) 16931, so this addon only adds
-				the Finvoice-specific requirements on top of the EN 16931 rules: a named
-				customer, and the payment data needed to build the Finvoice EpiDetails
-				payment block (credit transfer instructions with an IBAN, a payment
-				reference, and a due date), which is mandatory on every invoice.
+				Support for Finvoice 3.0, the Finnish electronic invoice format that
+				Finance Finland maintains and Finnish operators and banks exchange.
+				Finvoice conforms to the European Norm (EN) 16931, so this addon adds only
+				what the format needs on top of the EN 16931 rules: the e-invoice
+				addresses and operators that route the message, values that fit their
+				Finvoice elements whole, and the payment data for the EpiDetails payment
+				order, which every Finvoice invoice carries.
 
 				For more information on Finvoice, visit
 				[www.finanssiala.fi](https://www.finanssiala.fi/en/topics/finvoice-standard/).
