@@ -34,6 +34,7 @@ func init() {
 		is.InContext(tax.AddonIn(V3)),
 		norm.For(normalizePayInstructions),
 		norm.For(normalizePayCreditTransfer),
+		norm.For(normalizeOrgParty),
 	)
 }
 
