@@ -71,6 +71,16 @@ func TestPartyEndpointNormalization(t *testing.T) {
 			in:   []string{"iso6523-actorid-upis::0216:", businessID},
 			want: []string{"iso6523-actorid-upis::0216:", businessID},
 		},
+		{
+			name: "single-colon OVT is not taken as the OVT",
+			in:   []string{"iso6523-actorid-upis:0216:003710948874", businessID},
+			want: []string{"iso6523-actorid-upis:0216:003710948874", businessID},
+		},
+		{
+			name: "single-colon OVT gives way to the canonical one",
+			in:   []string{"iso6523-actorid-upis:0216:003722334455", ovt},
+			want: []string{ovt},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -41,11 +41,16 @@ func hasOVTEndpoint(endpoints []*org.Endpoint) bool {
 }
 
 // isOVT reports whether the endpoint is an ISO 6523 address with the OVT
-// scheme and a code, from its opaque part ":<icd>:<code>".
+// scheme and a code, from its opaque part ":<icd>:<code>". Only the canonical
+// empty-authority form counts, the one GOBL's EN 16931 rules accept.
 func isOVT(e *org.Endpoint) bool {
 	if e.URI.Scheme() != iso.ActorIDScheme {
 		return false
 	}
-	icd, code, ok := strings.Cut(strings.TrimPrefix(e.URI.Opaque(), ":"), ":")
+	rest, ok := strings.CutPrefix(e.URI.Opaque(), ":")
+	if !ok {
+		return false
+	}
+	icd, code, ok := strings.Cut(rest, ":")
 	return ok && icd == icdOVT && code != ""
 }
