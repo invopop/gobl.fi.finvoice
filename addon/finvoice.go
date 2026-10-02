@@ -47,17 +47,20 @@ func newAddon() *tax.AddonDef {
 		Requires: []cbc.Key{
 			en16931.V2017,
 		},
+		Extensions: extensions,
 		Description: i18n.String{
 			i18n.EN: here.Doc(`
 				Support for the Finnish Finvoice 3.0 format for electronic invoicing.
 				Finvoice conforms to the European Norm (EN) 16931, so this addon only adds
 				the Finvoice-specific requirements on top of the EN 16931 rules: a named
-				customer, and the payment data needed to build the Finvoice EpiDetails
-				payment block (credit transfer instructions with an IBAN, a payment
-				reference, and a due date), which is mandatory on every invoice.
+				customer, identifiers short enough for their Finvoice elements, a currency
+				with at most two decimals, a delivery period with both dates, and the
+				payment data needed to build the Finvoice EpiDetails payment block (credit
+				transfer instructions with an IBAN, a payment reference, and one due
+				date), which is mandatory on every invoice.
 
 				For more information on Finvoice, visit
-				[www.finanssiala.fi](https://www.finanssiala.fi/en/topics/finvoice-implementation-guidelines/).
+				[www.finanssiala.fi](https://www.finanssiala.fi/en/topics/finvoice-standard/).
 			`),
 		},
 	}

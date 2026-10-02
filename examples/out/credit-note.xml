@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Finvoice Version="3.0">
+  <SellerPartyDetails>
+    <SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
+    <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
+    <SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
+    <SellerPostalAddressDetails>
+      <SellerStreetName>Esimerkkikatu 1</SellerStreetName>
+      <SellerTownName>Helsinki</SellerTownName>
+      <SellerPostCodeIdentifier>00100</SellerPostCodeIdentifier>
+      <CountryCode>FI</CountryCode>
+    </SellerPostalAddressDetails>
+  </SellerPartyDetails>
+  <SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>
+  <SellerInformationDetails>
+    <SellerAccountDetails>
+      <SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
+      <SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic>
+    </SellerAccountDetails>
+  </SellerInformationDetails>
+  <BuyerPartyDetails>
+    <BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
+    <BuyerOrganisationName>Ostaja Oy</BuyerOrganisationName>
+    <BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
+    <BuyerPostalAddressDetails>
+      <BuyerStreetName>Testitie 2</BuyerStreetName>
+      <BuyerTownName>Espoo</BuyerTownName>
+      <BuyerPostCodeIdentifier>02100</BuyerPostCodeIdentifier>
+      <CountryCode>FI</CountryCode>
+    </BuyerPostalAddressDetails>
+  </BuyerPartyDetails>
+  <BuyerOrganisationUnitNumber>003745678907</BuyerOrganisationUnitNumber>
+  <InvoiceDetails>
+    <InvoiceTypeCode CodeListAgencyIdentifier="SPY">INV02</InvoiceTypeCode>
+    <InvoiceTypeCodeUN>381</InvoiceTypeCodeUN>
+    <InvoiceTypeText>CREDIT NOTE</InvoiceTypeText>
+    <OriginCode>Original</OriginCode>
+    <InvoiceNumber>2026-1002</InvoiceNumber>
+    <InvoiceDate Format="CCYYMMDD">20260910</InvoiceDate>
+    <OriginalInvoiceNumber>2026-1001</OriginalInvoiceNumber>
+    <OriginalInvoiceDate Format="CCYYMMDD">20260901</OriginalInvoiceDate>
+    <RowsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">-50,00</RowsTotalVatExcludedAmount>
+    <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">-50,00</InvoiceTotalVatExcludedAmount>
+    <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">-6,75</InvoiceTotalVatAmount>
+    <InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">-56,75</InvoiceTotalVatIncludedAmount>
+    <VatSpecificationDetails>
+      <VatBaseAmount AmountCurrencyIdentifier="EUR">-50,00</VatBaseAmount>
+      <VatRatePercent>13,5</VatRatePercent>
+      <VatCode>S</VatCode>
+      <VatRateAmount AmountCurrencyIdentifier="EUR">-6,75</VatRateAmount>
+    </VatSpecificationDetails>
+    <InvoiceFreeText>Palautettu tuote</InvoiceFreeText>
+    <PaymentTermsDetails>
+      <InvoiceDueDate Format="CCYYMMDD">20260924</InvoiceDueDate>
+    </PaymentTermsDetails>
+  </InvoiceDetails>
+  <InvoiceRow>
+    <ArticleIdentifier>BK-100</ArticleIdentifier>
+    <ArticleName>Käsikirja</ArticleName>
+    <InvoicedQuantity QuantityUnitCode="item" QuantityUnitCodeUN="EA">-2</InvoicedQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="item" QuantityUnitCodeUN="EA">25,00</UnitPriceAmount>
+    <UnitPriceNetAmount AmountCurrencyIdentifier="EUR" UnitPriceUnitCode="item" QuantityUnitCodeUN="EA">25,00</UnitPriceNetAmount>
+    <RowPositionIdentifier>1</RowPositionIdentifier>
+    <RowVatRatePercent>13,5</RowVatRatePercent>
+    <RowVatCode>S</RowVatCode>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">-50,00</RowVatExcludedAmount>
+  </InvoiceRow>
+  <EpiDetails>
+    <EpiIdentificationDetails>
+      <EpiDate Format="CCYYMMDD">20260910</EpiDate>
+      <EpiReference>RF18539007547034</EpiReference>
+    </EpiIdentificationDetails>
+    <EpiPartyDetails>
+      <EpiBfiPartyDetails>
+        <EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+      </EpiBfiPartyDetails>
+      <EpiBeneficiaryPartyDetails>
+        <EpiNameAddressDetails>Myyjä Oy</EpiNameAddressDetails>
+        <EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
+      </EpiBeneficiaryPartyDetails>
+    </EpiPartyDetails>
+    <EpiPaymentInstructionDetails>
+      <EpiRemittanceInfoIdentifier IdentificationSchemeName="ISO">RF18539007547034</EpiRemittanceInfoIdentifier>
+      <EpiInstructedAmount AmountCurrencyIdentifier="EUR">-56,75</EpiInstructedAmount>
+      <EpiCharge ChargeOption="SLEV">SLEV</EpiCharge>
+      <EpiDateOptionDate Format="CCYYMMDD">20260924</EpiDateOptionDate>
+      <EpiPaymentMeansCode>58</EpiPaymentMeansCode>
+    </EpiPaymentInstructionDetails>
+  </EpiDetails>
+  <InvoiceUrlNameText>PDF</InvoiceUrlNameText>
+  <InvoiceUrlText>file://invoice.pdf</InvoiceUrlText>
+</Finvoice>

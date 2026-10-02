@@ -1,12 +1,15 @@
 package finvoice_test
 
 import (
+	"strings"
 	"testing"
 
 	_ "github.com/invopop/gobl"
 	finvoice "github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
+	"github.com/invopop/gobl/catalogues/cef"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/currency"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
@@ -32,8 +35,9 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 			Name: "Myyjä Oy",
 			TaxID: &tax.Identity{
 				Country: "FI",
-				Code:    "23456780",
+				Code:    "76543212",
 			},
+			Endpoints: []*org.Endpoint{{URI: "iso6523-actorid-upis::0216:003776543212"}},
 			Addresses: []*org.Address{
 				{
 					Street:   "Esimerkkikatu 1",
@@ -47,8 +51,9 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 			Name: "Ostaja Oy",
 			TaxID: &tax.Identity{
 				Country: "FI",
-				Code:    "01120389",
+				Code:    "45678907",
 			},
+			Endpoints: []*org.Endpoint{{URI: "iso6523-actorid-upis::0216:003745678907"}},
 			Addresses: []*org.Address{
 				{
 					Street:   "Testitie 2",
@@ -72,7 +77,7 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 				DueDates: []*pay.DueDate{
 					{
 						Date:   cal.NewDate(2026, 7, 31),
-						Amount: num.NewAmount(12750, 2),
+						Amount: num.NewAmount(12550, 2),
 					},
 				},
 			},
@@ -297,4 +302,206 @@ func TestNormalization(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		assert.Equal(t, "RF18539007547034", inv.Payment.Instructions.Ref.String())
 	})
+}
+
+// TestFinvoiceLimits covers the values Finvoice cannot hold, which the addon
+// refuses before a converter would have to cut them: each limit is held at
+// its length and refused one past it.
+func TestFinvoiceLimits(t *testing.T) {
+	digits := func(n int) cbc.Code { return cbc.Code(strings.Repeat("9", n)) }
+	ref := func(code cbc.Code) []*org.DocumentRef { return []*org.DocumentRef{{Code: code}} }
+	tests := []struct {
+		name   string
+		adjust func(inv *bill.Invoice)
+		want   string
+	}{
+		{"invoice number of 20 with its series", func(inv *bill.Invoice) { inv.Code = digits(15) }, ""},
+		{"preceding number of 20", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Preceding = []*org.DocumentRef{{Code: digits(20), IssueDate: cal.NewDate(2026, 6, 1)}}
+		}, ""},
+		{"ordering references of 70", func(inv *bill.Invoice) {
+			inv.Ordering = &bill.Ordering{Code: digits(70), Sales: ref(digits(70)), Purchases: ref(digits(70)),
+				Contracts: ref(digits(70)), Projects: ref(digits(70)), Tender: ref(digits(70))}
+		}, ""},
+		{"item reference of 70", func(inv *bill.Invoice) { inv.Lines[0].Item.Ref = digits(70) }, ""},
+		{"legal identity of 35", func(inv *bill.Invoice) {
+			inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(35)}}
+		}, ""},
+		{"identity of another scope of 80", func(inv *bill.Invoice) {
+			inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeTax, Code: digits(80)}}
+		}, ""},
+		{"e-invoice address of 35", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::0216:" + digits(35))}}
+		}, ""},
+		{"payment reference of 35", func(inv *bill.Invoice) { inv.Payment.Instructions.Ref = digits(35) }, ""},
+		{"operator of 35", func(inv *bill.Invoice) {
+			inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{finvoice.ExtKeyOperator: digits(35)})
+		}, ""},
+		{"currency without decimals", func(inv *bill.Invoice) {
+			inv.Currency = "JPY"
+			inv.ExchangeRates = []*currency.ExchangeRate{{From: "JPY", To: "EUR", Amount: num.MakeAmount(6, 3)}}
+		}, ""},
+
+		{"invoice number of 21 with its series", func(inv *bill.Invoice) { inv.Code = digits(16) },
+			"invoice number with its series must be at most 20 characters"},
+		{"preceding number of 21", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Preceding = []*org.DocumentRef{{Code: digits(21), IssueDate: cal.NewDate(2026, 6, 1)}}
+		}, "preceding document number must be at most 20 characters"},
+		{"buyer reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Code: digits(71)} },
+			"ordering references must be at most 70 characters"},
+		{"sales reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Sales: ref(digits(71))} },
+			"ordering references must be at most 70 characters"},
+		{"order reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Purchases: ref(digits(71))} },
+			"ordering references must be at most 70 characters"},
+		{"contract reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Contracts: ref(digits(71))} },
+			"ordering references must be at most 70 characters"},
+		{"project reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Projects: ref(digits(71))} },
+			"ordering references must be at most 70 characters"},
+		{"tender reference of 71", func(inv *bill.Invoice) { inv.Ordering = &bill.Ordering{Tender: ref(digits(71))} },
+			"ordering references must be at most 70 characters"},
+		{"item reference of 71", func(inv *bill.Invoice) { inv.Lines[0].Item.Ref = digits(71) },
+			"item reference must be at most 70 characters"},
+		{"legal identity of 36", func(inv *bill.Invoice) {
+			inv.Customer.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(36)}}
+		}, "($.customer.identities[0].code) legal identity code must be at most 35 characters"},
+		{"e-invoice address of 36", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::0216:" + digits(36))}}
+		}, "($.customer) e-invoice address code must be at most 35 characters"},
+		{"e-invoice address scheme of 11", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::" + digits(11) + ":003745678907")}}
+		}, "e-invoice address code must be at most 35 characters and its scheme at most 10"},
+		{"payment reference of 36", func(inv *bill.Invoice) { inv.Payment.Instructions.Ref = digits(36) },
+			"payment reference must be at most 35 characters"},
+		{"operator of 36", func(inv *bill.Invoice) {
+			inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{finvoice.ExtKeyOperator: digits(36)})
+		}, "customer 'fi-finvoice-operator' extension must be 2 to 35 letters or digits"},
+		{"operator with a hyphen", func(inv *bill.Invoice) {
+			inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{finvoice.ExtKeyOperator: "0037-0001"})
+		}, "customer 'fi-finvoice-operator' extension must be 2 to 35 letters or digits"},
+		{"supplier operator", func(inv *bill.Invoice) {
+			inv.Supplier.Ext = tax.ExtensionsOf(cbc.CodeMap{finvoice.ExtKeyOperator: "X"})
+		}, "supplier 'fi-finvoice-operator' extension must be 2 to 35 letters or digits"},
+		{"currency with three decimals", func(inv *bill.Invoice) {
+			inv.Currency = "BHD"
+			inv.ExchangeRates = []*currency.ExchangeRate{{From: "BHD", To: "EUR", Amount: num.MakeAmount(24, 1)}}
+		}, "currency must use at most 2 decimals"},
+		{"delivery period with one date", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Period: &cal.Period{Start: cal.NewDate(2026, 6, 1)}}
+		}, "delivery period must have both dates"},
+		{"two purchase orders", func(inv *bill.Invoice) {
+			inv.Ordering = &bill.Ordering{Purchases: []*org.DocumentRef{{Code: "PO-1"}, {Code: "PO-2"}}}
+		}, "at most one reference of each kind is allowed"},
+		{"a due date for part of the amount", func(inv *bill.Invoice) {
+			half := num.MakePercentage(50, 2)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Percent: &half}}
+		}, "the due date must cover the whole amount"},
+		{"a payee with a long legal identity, which is never written", func(inv *bill.Invoice) {
+			inv.Payment.Payee = &org.Party{Name: "Perintä Oy", Identities: []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(36)}}}
+		}, ""},
+		{"a delivery receiver with a long endpoint, which is never written", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Varasto Oy",
+				Endpoints: []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::0216:" + digits(36))}}}}
+		}, ""},
+		{"a delivery receiver with a long legal identity", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Varasto Oy",
+				Identities: []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(36)}}}}
+		}, "legal identity code must be at most 35 characters"},
+		{"a customer with a coded inbox instead of an endpoint", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = nil
+			inv.Customer.Inboxes = []*org.Inbox{{Scheme: "0216", Code: "003745678907"}}
+		}, ""},
+		{"an attachment, which travels as a separate message", func(inv *bill.Invoice) {
+			inv.Attachments = []*org.Attachment{{Name: "erittely.pdf", URL: "https://myyja.fi/erittely.pdf"}}
+		}, "attachments are not supported"},
+		{"a customer inbox code of 36", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = nil
+			inv.Customer.Inboxes = []*org.Inbox{{Scheme: "0216", Code: digits(36)}}
+		}, "e-invoice address code must be at most 35 characters"},
+		{"a supplier without an e-invoice address", func(inv *bill.Invoice) {
+			inv.Supplier.Endpoints = nil
+		}, "supplier needs an e-invoice address"},
+		{"a customer without an e-invoice address", func(inv *bill.Invoice) {
+			inv.Customer.Endpoints = nil
+		}, "customer needs an e-invoice address"},
+		{"a quantity of 14 characters", func(inv *bill.Invoice) {
+			inv.Lines[0].Quantity = num.MakeAmount(1234567890123, 2)
+			full := num.MakePercentage(1, 0)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Percent: &full}}
+		}, ""},
+		{"a quantity of 14 characters on a credit note, which writes the sign", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Lines[0].Quantity = num.MakeAmount(1234567890123, 2)
+			full := num.MakePercentage(1, 0)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Percent: &full}}
+		}, "quantity must be at most 14 characters"},
+		{"a negative quantity of 14 characters on a credit note, written without its sign", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Lines[0].Quantity = num.MakeAmount(-123456789012, 2)
+			inv.Lines = append(inv.Lines, &bill.Line{Quantity: num.MakeAmount(2000, 0), Item: inv.Lines[0].Item, Taxes: inv.Lines[0].Taxes})
+			full := num.MakePercentage(1, 0)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Percent: &full}}
+		}, ""},
+		{"a quantity of 15 characters", func(inv *bill.Invoice) {
+			inv.Lines[0].Quantity = num.MakeAmount(12345678901234, 2)
+			full := num.MakePercentage(1, 0)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Percent: &full}}
+		}, "quantity must be at most 14 characters"},
+		{"no invoice code", func(inv *bill.Invoice) { inv.Code = "" }, "invoice code is required"},
+		{"a second account as a BBAN", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
+				&pay.CreditTransfer{Number: "12345-678", BIC: "OKOYFIHH"})
+		}, ""},
+		{"a second account without a BIC", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
+				&pay.CreditTransfer{IBAN: "FI4250001510000023"})
+		}, "credit transfers after the first need a BIC"},
+		{"a due date for part of the amount given as an amount", func(inv *bill.Invoice) {
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Amount: num.NewAmount(5000, 2)}}
+		}, "the due date must cover the whole amount"},
+		{"a due date for what remains after an advance", func(inv *bill.Invoice) {
+			inv.Payment.Advances = []*pay.Record{{Description: "Ennakko", Amount: num.MakeAmount(2750, 2)}}
+			inv.Payment.Terms.DueDates = []*pay.DueDate{{Date: cal.NewDate(2026, 7, 31), Amount: num.NewAmount(9800, 2)}}
+		}, ""},
+		{"two exemption reasons in one category", func(inv *bill.Invoice) {
+			exempt := func(code string) *bill.Line {
+				return &bill.Line{Quantity: num.MakeAmount(1, 0), Item: &org.Item{Name: "Hoito", Price: num.NewAmount(10000, 2)},
+					Taxes: tax.Set{{Category: tax.CategoryVAT, Key: tax.KeyExempt, Ext: tax.ExtensionsOf(cbc.CodeMap{cef.ExtKeyVATEX: cbc.Code(code)})}}}
+			}
+			inv.Lines = []*bill.Line{exempt("VATEX-EU-132"), exempt("VATEX-EU-135")}
+		}, "one exemption reason per VAT category"},
+		{"two exemption notes in one category", func(inv *bill.Invoice) {
+			inv.Lines[0].Taxes = tax.Set{{Category: tax.CategoryVAT, Key: tax.KeyExempt}}
+			inv.Tax = &bill.Tax{Notes: []*tax.Note{
+				{Category: tax.CategoryVAT, Key: tax.KeyExempt, Text: "Terveydenhuolto"},
+				{Category: tax.CategoryVAT, Key: tax.KeyExempt, Text: "Koulutus"},
+			}}
+		}, "one exemption reason per VAT category"},
+		{"a charge exempt for another reason than the lines", func(inv *bill.Invoice) {
+			inv.Lines[0].Taxes = tax.Set{{Category: tax.CategoryVAT, Key: tax.KeyExempt, Ext: tax.ExtensionsOf(cbc.CodeMap{cef.ExtKeyVATEX: "VATEX-EU-132"})}}
+			inv.Charges = []*bill.Charge{{Amount: num.MakeAmount(500, 2), Reason: "Rahti",
+				Taxes: tax.Set{{Category: tax.CategoryVAT, Key: tax.KeyExempt, Ext: tax.ExtensionsOf(cbc.CodeMap{cef.ExtKeyVATEX: "VATEX-EU-135"})}}}}
+		}, "one exemption reason per VAT category"},
+		{"instalments", func(inv *bill.Invoice) {
+			half := num.MakePercentage(50, 2)
+			inv.Payment.Terms.DueDates = []*pay.DueDate{
+				{Date: cal.NewDate(2026, 7, 15), Percent: &half},
+				{Date: cal.NewDate(2026, 7, 31), Percent: &half},
+			}
+		}, "at most one due date is allowed"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inv := testInvoiceStandard(t)
+			tt.adjust(inv)
+			require.NoError(t, inv.Calculate())
+			err := rules.Validate(inv)
+			if tt.want == "" {
+				assert.NoError(t, err)
+				return
+			}
+			assert.ErrorContains(t, err, tt.want)
+		})
+	}
 }

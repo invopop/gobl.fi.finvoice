@@ -1,0 +1,161 @@
+{
+	"$regime": "FI",
+	"$addons": [
+		"eu-en16931-v2017",
+		"fi-finvoice-v3"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "standard",
+	"code": "1042",
+	"issue_date": "2026-09-22",
+	"currency": "EUR",
+	"tax": {
+		"rounding": "currency",
+		"ext": {
+			"untdid-document-type": "380"
+		}
+	},
+	"supplier": {
+		"name": "Lähettäjä Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "76543212"
+		},
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003776543212"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Esimerkkikatu 1",
+				"locality": "Helsinki",
+				"code": "00100",
+				"country": "FI"
+			}
+		],
+		"emails": [
+			{
+				"addr": "laskutus@lahettaja.example"
+			}
+		]
+	},
+	"customer": {
+		"name": "Vastaanottaja Oy",
+		"tax_id": {
+			"country": "FI",
+			"code": "45678907"
+		},
+		"people": [
+			{
+				"name": {
+					"given": "Olli",
+					"surname": "Ostaja"
+				}
+			}
+		],
+		"endpoints": [
+			{
+				"uri": "iso6523-actorid-upis::0216:003745678907"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Testitie 2",
+				"locality": "Espoo",
+				"code": "02100",
+				"country": "FI"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "1.00",
+			"item": {
+				"ref": "11",
+				"name": "Kulut",
+				"price": "1.00",
+				"unit": "h"
+			},
+			"sum": "1.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "zero",
+					"percent": "0%",
+					"ext": {
+						"untdid-tax-category": "Z"
+					}
+				}
+			],
+			"total": "1.00",
+			"notes": [
+				{
+					"text": "Laskutettavat kulut"
+				}
+			]
+		}
+	],
+	"payment": {
+		"terms": {
+			"due_dates": [
+				{
+					"date": "2026-10-22",
+					"amount": "1.00",
+					"percent": "100%"
+				}
+			],
+			"notes": "30pv netto"
+		},
+		"instructions": {
+			"key": "credit-transfer",
+			"ref": "1042005",
+			"credit_transfer": [
+				{
+					"iban": "FI2112345600000785",
+					"bic": "NDEAFIHH"
+				}
+			],
+			"ext": {
+				"untdid-payment-means": "30"
+			}
+		}
+	},
+	"totals": {
+		"sum": "1.00",
+		"total": "1.00",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "zero",
+							"ext": {
+								"untdid-tax-category": "Z"
+							},
+							"base": "1.00",
+							"percent": "0%",
+							"amount": "0.00"
+						}
+					],
+					"amount": "0.00"
+				}
+			],
+			"sum": "0.00"
+		},
+		"tax": "0.00",
+		"total_with_tax": "1.00",
+		"payable": "1.00"
+	},
+	"notes": [
+		{
+			"key": "general",
+			"text": "testing e-invoicing",
+			"ext": {
+				"untdid-text-subject": "AAI"
+			}
+		}
+	]
+}
