@@ -1,4 +1,4 @@
-package finvoice
+package addon
 
 import (
 	"github.com/invopop/gobl/bill"

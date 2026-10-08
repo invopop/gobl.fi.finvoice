@@ -1,5 +1,5 @@
-// Package finvoice provides validations for the Finnish Finvoice 3.0 format.
-package finvoice
+// Package addon provides validations for the Finnish Finvoice 3.0 format.
+package addon
 
 import (
 	"github.com/invopop/gobl/addons/eu/en16931"

@@ -1,10 +1,10 @@
-package finvoice_test
+package addon_test
 
 import (
 	"testing"
 
 	_ "github.com/invopop/gobl"
-	finvoice "github.com/invopop/gobl.fi.finvoice/addon"
+	"github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/currency"
@@ -22,7 +22,7 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 	t.Helper()
 	return &bill.Invoice{
 		Regime:    tax.WithRegime("FI"),
-		Addons:    tax.WithAddons(finvoice.V3),
+		Addons:    tax.WithAddons(addon.V3),
 		IssueDate: cal.MakeDate(2026, 7, 1),
 		Type:      bill.InvoiceTypeStandard,
 		Currency:  currency.EUR,

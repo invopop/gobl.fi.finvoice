@@ -1,4 +1,4 @@
-package finvoice_test
+package addon_test
 
 import (
 	"testing"
