@@ -377,6 +377,23 @@ func TestEInvoiceAddressLengthRules(t *testing.T) {
 	})
 }
 
+func TestPartyNameRules(t *testing.T) {
+	runRuleCases(t, []ruleCase{
+		{"names of two characters", func(inv *bill.Invoice) {
+			inv.Supplier.Name = "Oy"
+			inv.Customer.Name = "Ab"
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Ky"}}
+		}, ""},
+		{"a supplier name of one character", func(inv *bill.Invoice) { inv.Supplier.Name = "M" },
+			"supplier name must be at least 2 characters"},
+		{"a customer name of one character", func(inv *bill.Invoice) { inv.Customer.Name = "O" },
+			"customer name must be at least 2 characters"},
+		{"a delivery receiver name of one character", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "V"}}
+		}, "delivery receiver name must be at least 2 characters"},
+	})
+}
+
 func TestLegalIdentityRules(t *testing.T) {
 	runRuleCases(t, []ruleCase{
 		{"legal identity of 35", func(inv *bill.Invoice) {
@@ -555,6 +572,10 @@ func TestPaymentInstructionRules(t *testing.T) {
 		}, ""},
 		{"payment reference of 36", func(inv *bill.Invoice) { inv.Payment.Instructions.Ref = digits(36) },
 			"payment reference must be at most 35 characters"},
+		{"a second account with a one-character number", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
+				&pay.CreditTransfer{Number: "7", BIC: "OKOYFIHH"})
+		}, "account number must be 2 to 35 characters"},
 		{"a second account without a BIC", func(inv *bill.Invoice) {
 			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
 				&pay.CreditTransfer{IBAN: "FI4250001510000023"})

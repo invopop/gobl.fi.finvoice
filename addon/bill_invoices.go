@@ -24,6 +24,9 @@ const (
 	articleIdentifierMaxLength = 70
 	paymentReferenceMaxLength  = 35
 	quantityMaxLength          = 14
+	nameMinLength              = 2
+	accountNumberMinLength     = 2
+	accountNumberMaxLength     = 35
 )
 
 // epiAmountDecimals is the exact precision of the payment order's amount,
@@ -45,6 +48,11 @@ const (
 func billInvoiceRules() *rules.Set {
 	return rules.For(new(bill.Invoice),
 		rules.Field("supplier",
+			rules.Field("name",
+				rules.Assert("38", fmt.Sprintf("supplier name must be at least %d characters (Finvoice SellerOrganisationName)", nameMinLength),
+					is.RuneLength(nameMinLength, 0),
+				),
+			),
 			rules.Assert("13", "supplier needs an e-invoice address, an ISO 6523 endpoint or a coded inbox (Finvoice SellerOrganisationUnitNumber)",
 				is.Func("e-invoice address", hasEInvoiceAddress),
 			),
@@ -72,6 +80,9 @@ func billInvoiceRules() *rules.Set {
 			rules.Assert("01", "customer is required (Finvoice BuyerPartyDetails)", is.Present),
 			rules.Field("name",
 				rules.Assert("02", "customer name is required (Finvoice BuyerOrganisationName)", is.Present),
+				rules.Assert("39", fmt.Sprintf("customer name must be at least %d characters (Finvoice BuyerOrganisationName)", nameMinLength),
+					is.RuneLength(nameMinLength, 0),
+				),
 			),
 			rules.Assert("17", "customer needs an e-invoice address, an ISO 6523 endpoint or a coded inbox (Finvoice BuyerOrganisationUnitNumber)",
 				is.Func("e-invoice address", hasEInvoiceAddress),
@@ -127,6 +138,11 @@ func billInvoiceRules() *rules.Set {
 		),
 		rules.Field("delivery",
 			rules.Field("receiver",
+				rules.Field("name",
+					rules.AssertIfPresent("40", fmt.Sprintf("delivery receiver name must be at least %d characters (Finvoice DeliveryOrganisationName)", nameMinLength),
+						is.RuneLength(nameMinLength, 0),
+					),
+				),
 				rules.Field("identities",
 					rules.Each(
 						rules.When(is.Func("legal scope", isLegalIdentity),
@@ -200,6 +216,11 @@ func billInvoiceRules() *rules.Set {
 						rules.Field("bic",
 							rules.AssertIfPresent("10", "credit transfer BIC is not valid (Finvoice EpiBfiIdentifier)",
 								pay.IsBIC,
+							),
+						),
+						rules.Field("number",
+							rules.AssertIfPresent("41", fmt.Sprintf("credit transfer account number must be %d to %d characters (Finvoice SellerAccountID)", accountNumberMinLength, accountNumberMaxLength),
+								is.RuneLength(accountNumberMinLength, accountNumberMaxLength),
 							),
 						),
 					),
