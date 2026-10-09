@@ -134,6 +134,23 @@ func cut(s string, n int) string {
 	return string([]rune(s)[:n])
 }
 
+// textMinLength is the fewest characters most Finvoice text elements take.
+const textMinLength = 2
+
+// tooShort reports a text an element with the usual minimum cannot hold.
+func tooShort(s string) bool {
+	return utf8.RuneCountInString(strings.TrimSpace(s)) < textMinLength
+}
+
+// fit cuts an optional text to n characters, leaving it out when it is too
+// short for its element.
+func fit(s string, n int) string {
+	if tooShort(s) {
+		return ""
+	}
+	return strings.TrimSpace(cut(strings.TrimSpace(s), n))
+}
+
 // split breaks s into pieces of at most n characters at word boundaries
 // where it can, keeping at most limit of them, for text elements Finvoice
 // lets repeat.

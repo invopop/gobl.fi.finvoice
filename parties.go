@@ -103,7 +103,7 @@ func (c *converter) newSeller() *SellerPartyDetails {
 	s := &SellerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, unbounded),
-		TradingName: cut(p.Alias, nameMaxLength),
+		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -124,7 +124,7 @@ func (c *converter) newBuyer() *BuyerPartyDetails {
 	b := &BuyerPartyDetails{
 		Identifier:  newPartyIdentifier(p),
 		Name:        split(p.Name, nameMaxLength, unbounded),
-		TradingName: cut(p.Alias, nameMaxLength),
+		TradingName: fit(p.Alias, nameMaxLength),
 		TaxCode:     partyTaxCode(p),
 	}
 	if a := newPostalAddress(p); a != nil {
@@ -201,20 +201,20 @@ func partyTaxCode(p *org.Party) string {
 	return p.TaxID.String()
 }
 
-// newPostalAddress writes the first address, left out when it lacks the town
-// or post code Finvoice requires.
+// newPostalAddress writes the first address, left out when its town or post
+// code is too short for the elements Finvoice requires.
 func newPostalAddress(p *org.Party) *postalAddress {
 	if len(p.Addresses) == 0 || p.Addresses[0] == nil {
 		return nil
 	}
 	a := p.Addresses[0]
-	if a.Locality == "" || a.Code == cbc.CodeEmpty {
+	if tooShort(a.Locality) || tooShort(a.Code.String()) {
 		return nil
 	}
 	out := &postalAddress{
 		townName:      cut(a.Locality, addressMaxLength),
 		postCode:      cut(a.Code.String(), addressMaxLength),
-		subdivision:   cut(a.Region, addressMaxLength),
+		subdivision:   fit(a.Region, addressMaxLength),
 		countryCode:   a.Country.String(),
 		postOfficeBox: cut(a.PostOfficeBox, addressMaxLength),
 	}

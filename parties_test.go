@@ -54,6 +54,27 @@ func TestConvertParties(t *testing.T) {
 			}
 		}
 	})
+	t.Run("one-character texts are left out, as Finvoice takes two or more", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Supplier.Alias = "M"
+		inv.Supplier.Addresses[0].Region = "U"
+		inv.Payment.Payee = &org.Party{Name: "P"}
+		doc := convertAdjusted(t, env)
+		assert.Empty(t, doc.Seller.TradingName)
+		assert.Empty(t, doc.Seller.Address.Subdivision)
+		assert.Empty(t, doc.Epi.Party.Beneficiary.NameAddress)
+	})
+	t.Run("address with a one-character town or post code is left out", func(t *testing.T) {
+		for field, set := range map[string]func(a *org.Address){
+			"town":      func(a *org.Address) { a.Locality = "X" },
+			"post code": func(a *org.Address) { a.Code = "5" },
+		} {
+			env, inv := exampleEnvelope(t, "invoice")
+			set(inv.Customer.Addresses[0])
+			doc := convertAdjusted(t, env)
+			assert.Nil(t, doc.Buyer.Address, field)
+		}
+	})
 	t.Run("address without a street", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")
 		inv.Customer.Addresses[0].Street = ""

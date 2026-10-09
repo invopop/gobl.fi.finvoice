@@ -133,7 +133,7 @@ func (c *converter) newEpiDetails() *EpiDetails {
 		},
 		Party: EpiPartyDetails{
 			Beneficiary: EpiBeneficiaryPartyDetails{
-				NameAddress: strings.TrimSpace(cut(payee.Name, beneficiaryNameMaxLength)),
+				NameAddress: fit(payee.Name, beneficiaryNameMaxLength),
 				AccountID:   *newAccountID(ct),
 			},
 		},
