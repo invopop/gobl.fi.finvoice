@@ -426,6 +426,13 @@ func TestInvoiceNumberRules(t *testing.T) {
 			inv.Type = bill.InvoiceTypeCreditNote
 			inv.Preceding = []*org.DocumentRef{{Code: digits(21), IssueDate: cal.NewDate(2026, 6, 1)}}
 		}, "preceding document number must be at most 20 characters"},
+		{"two preceding documents", func(inv *bill.Invoice) {
+			inv.Type = bill.InvoiceTypeCreditNote
+			inv.Preceding = []*org.DocumentRef{
+				{Code: "1001", IssueDate: cal.NewDate(2026, 6, 1)},
+				{Code: "1000", IssueDate: cal.NewDate(2026, 5, 1)},
+			}
+		}, "at most one preceding document is allowed"},
 	})
 }
 

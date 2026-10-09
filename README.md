@@ -106,7 +106,8 @@ Finvoice invoice, credit notes included:
   references and item references up to 70, a legal identity code and the
   payment reference up to 35, an e-invoice address code 2 to 35, and the
   address's scheme up to 10. Each kind of ordering reference takes one
-  document, as each Finvoice element holds one identifier.
+  document, as each Finvoice element holds one identifier, and an invoice
+  cites one preceding document.
 - **Currency**: at most two decimals, since the payment order's
   `EpiInstructedAmount` takes exactly two and would otherwise be rounded.
 - **VAT rates**: at most three decimals, the most `RowVatRatePercent` and
@@ -198,6 +199,12 @@ requires.
 - **Credit notes** are written as `INV02` with negative amounts, the sign
   convention of the format; the parser flips them back whenever the total
   is zero or negative, as the guidelines require of a credit note.
+- **Preceding document.** Its number is written as `OriginalInvoiceNumber`,
+  without its date. `OriginalInvoiceDate` and `OriginalInvoiceReference`
+  are optional in the schema, and some Finvoice 3.0 intakes refuse a
+  message carrying them, so neither is written. Without
+  `OriginalInvoiceReference` there is room for one preceding document only,
+  so the addon allows one. The parser reads both elements.
 - **Invoice type.** `InvoiceTypeCode` is `INV01`, `INV02`, `INV06` or
   `INV07` from the GOBL type and tags, and `InvoiceTypeCodeUN` the UNTDID
   1001 code the EN 16931 addon records.
@@ -310,7 +317,8 @@ and code become one invoice number, a street number part of the street, a
 street continued on a second line a street extra, and a missing street the
 town or PO box that stood in for it. An advance loses its description,
 notes their key, VAT rates become their percentage, and charges and
-discounts their UNTDID codes, not GOBL keys. Without transmission details,
+discounts their UNTDID codes, not GOBL keys. The preceding document
+comes back without its date. Without transmission details,
 addresses lose their scheme and are read back by shape. The sending party
 gains the operator it was sent through, and the parsed document uses
 currency rounding.
