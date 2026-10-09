@@ -204,8 +204,11 @@ requires.
   over as many elements as they need; a note longer than one element comes
   back as several. Streets, VAT notes and payment terms take the three,
   three and two lines the schema allows, and are cut beyond them. An email
-  or web address too long for its element, and a postal address without a
-  town and post code, are left out. So is a discount or charge percentage
+  or web address too long for its element, and a postal address whose town
+  or post code is missing or a single character, are left out, as is any
+  optional text of one character, since Finvoice's text elements take two
+  or more; party names of one character are refused by the addon for the
+  same reason. So is a discount or charge percentage
   finer than the three decimals Finvoice takes, with its base; the amount
   beside it is written as usual, so the totals stay exact.
 - **Prices.** A unit price finer than the five decimals Finvoice takes is
