@@ -382,7 +382,8 @@ func TestPartyNameRules(t *testing.T) {
 		{"names of two characters", func(inv *bill.Invoice) {
 			inv.Supplier.Name = "Oy"
 			inv.Customer.Name = "Ab"
-			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Ky"}}
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Ky",
+				Addresses: []*org.Address{{Locality: "Ii", Code: "91", Country: "FI"}}}}
 		}, ""},
 		{"a supplier name of one character", func(inv *bill.Invoice) { inv.Supplier.Name = "M" },
 			"supplier name must be at least 2 characters"},
@@ -463,15 +464,36 @@ func TestOrderingRules(t *testing.T) {
 }
 
 func TestDeliveryRules(t *testing.T) {
+	receiver := func() *org.Party {
+		return &org.Party{Name: "Varasto Oy", Addresses: []*org.Address{{Street: "Satamakatu 3", Locality: "Turku", Code: "20100", Country: "FI"}}}
+	}
 	runRuleCases(t, []ruleCase{
+		{"a delivery receiver with a name and an address", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Receiver: receiver()}
+		}, ""},
 		{"a delivery receiver with a long endpoint, which is never written", func(inv *bill.Invoice) {
-			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Varasto Oy",
-				Endpoints: []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::0216:" + digits(36))}}}}
+			r := receiver()
+			r.Endpoints = []*org.Endpoint{{URI: cbc.URI("iso6523-actorid-upis::0216:" + digits(36))}}
+			inv.Delivery = &bill.DeliveryDetails{Receiver: r}
 		}, ""},
 		{"a delivery receiver with a long legal identity", func(inv *bill.Invoice) {
-			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Varasto Oy",
-				Identities: []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(36)}}}}
+			r := receiver()
+			r.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: digits(36)}}
+			inv.Delivery = &bill.DeliveryDetails{Receiver: r}
 		}, "legal identity code must be at most 35 characters"},
+		{"a delivery receiver without an address", func(inv *bill.Invoice) {
+			inv.Delivery = &bill.DeliveryDetails{Receiver: &org.Party{Name: "Varasto Oy"}}
+		}, "delivery receiver needs a name and an address with a town and post code"},
+		{"a delivery receiver whose address has no post code", func(inv *bill.Invoice) {
+			r := receiver()
+			r.Addresses[0].Code = ""
+			inv.Delivery = &bill.DeliveryDetails{Receiver: r}
+		}, "delivery receiver needs a name and an address with a town and post code"},
+		{"a delivery receiver without a name", func(inv *bill.Invoice) {
+			r := receiver()
+			r.Name = ""
+			inv.Delivery = &bill.DeliveryDetails{Receiver: r}
+		}, "delivery receiver needs a name and an address with a town and post code"},
 		{"delivery period with one date", func(inv *bill.Invoice) {
 			inv.Delivery = &bill.DeliveryDetails{Period: &cal.Period{Start: cal.NewDate(2026, 6, 1)}}
 		}, "delivery period must have both dates"},

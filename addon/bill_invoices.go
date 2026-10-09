@@ -2,6 +2,7 @@ package addon
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/invopop/gobl/bill"
@@ -138,6 +139,9 @@ func billInvoiceRules() *rules.Set {
 		),
 		rules.Field("delivery",
 			rules.Field("receiver",
+				rules.Assert("42", "delivery receiver needs a name and an address with a town and post code (Finvoice DeliveryPartyDetails)",
+					is.Func("name and address", receiverIsWritable),
+				),
 				rules.Field("name",
 					rules.AssertIfPresent("40", fmt.Sprintf("delivery receiver name must be at least %d characters (Finvoice DeliveryOrganisationName)", nameMinLength),
 						is.RuneLength(nameMinLength, 0),
@@ -403,6 +407,26 @@ func oneExemptionReasonPerCategory(val any) bool {
 			return false
 		}
 		notes[n.Key] = true
+	}
+	return true
+}
+
+// receiverIsWritable checks the delivery receiver has the name and the
+// address lines the delivery party block requires, each of at least the
+// length Finvoice's text elements take.
+func receiverIsWritable(val any) bool {
+	p, ok := val.(*org.Party)
+	if !ok || p == nil {
+		return true
+	}
+	if len(p.Addresses) == 0 || p.Addresses[0] == nil {
+		return false
+	}
+	a := p.Addresses[0]
+	for _, s := range []string{p.Name, a.Locality, a.Code.String()} {
+		if utf8.RuneCountInString(strings.TrimSpace(s)) < nameMinLength {
+			return false
+		}
 	}
 	return true
 }
