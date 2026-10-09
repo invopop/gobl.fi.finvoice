@@ -26,8 +26,14 @@ const (
 	quantityMaxLength          = 14
 )
 
-// epiAmountDecimals is the exact precision of the payment order's amount.
-const epiAmountDecimals = 2
+// epiAmountDecimals is the exact precision of the payment order's amount,
+// vatPercentDecimals the most a VAT rate may have; a GOBL percentage holds
+// the fraction, so its exponent is two more than the rate's decimals.
+const (
+	epiAmountDecimals  = 2
+	vatPercentDecimals = 3
+	vatPercentExp      = vatPercentDecimals + 2
+)
 
 // Finvoice's EpiDetails payment block is mandatory on every invoice,
 // including credit notes, so the payment rules below apply unconditionally
@@ -144,6 +150,9 @@ func billInvoiceRules() *rules.Set {
 		),
 		rules.Assert("31", "one exemption reason per VAT category (Finvoice VatExemptionReasonCode, VatFreeText)",
 			is.Func("one reason per category", oneExemptionReasonPerCategory),
+		),
+		rules.Assert("37", fmt.Sprintf("VAT percentage must have at most %d decimals (Finvoice RowVatRatePercent, VatRatePercent)", vatPercentDecimals),
+			is.Func("VAT percentages fit", vatPercentsFit),
 		),
 		rules.Assert("32", fmt.Sprintf("quantity must be at most %d characters (Finvoice InvoicedQuantity)", quantityMaxLength),
 			is.Func("quantities fit", quantitiesFit),
@@ -299,14 +308,8 @@ func dueDateCoversAll(val any) bool {
 	return true
 }
 
-// oneExemptionReasonPerCategory checks the lines, discounts and charges of
-// a VAT category share one exemption code, and the category has at most one
-// note, since the breakdown gives one reason per category.
-func oneExemptionReasonPerCategory(val any) bool {
-	inv, ok := val.(*bill.Invoice)
-	if !ok || inv == nil {
-		return true
-	}
+// taxSets lists the taxes of every line, discount and charge.
+func taxSets(inv *bill.Invoice) []tax.Set {
 	var sets []tax.Set
 	for _, line := range inv.Lines {
 		if line != nil {
@@ -323,8 +326,37 @@ func oneExemptionReasonPerCategory(val any) bool {
 			sets = append(sets, c.Taxes)
 		}
 	}
+	return sets
+}
+
+// vatPercentsFit checks every VAT rate can be written whole.
+func vatPercentsFit(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil {
+		return true
+	}
+	for _, set := range taxSets(inv) {
+		vat := set.Get(tax.CategoryVAT)
+		if vat == nil || vat.Percent == nil {
+			continue
+		}
+		if vat.Percent.Rescale(vatPercentExp).Compare(*vat.Percent) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// oneExemptionReasonPerCategory checks the lines, discounts and charges of
+// a VAT category share one exemption code, and the category has at most one
+// note, since the breakdown gives one reason per category.
+func oneExemptionReasonPerCategory(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil {
+		return true
+	}
 	reasons := map[cbc.Key]cbc.Code{}
-	for _, set := range sets {
+	for _, set := range taxSets(inv) {
 		vat := set.Get(tax.CategoryVAT)
 		if vat == nil || vat.Key == cbc.KeyEmpty {
 			continue

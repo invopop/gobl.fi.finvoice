@@ -491,6 +491,30 @@ func TestExemptionRules(t *testing.T) {
 	})
 }
 
+func TestVATRateRules(t *testing.T) {
+	rate := func(p num.Percentage) tax.Set {
+		return tax.Set{{Category: tax.CategoryVAT, Key: tax.KeyStandard, Percent: &p}}
+	}
+	runRuleCases(t, []ruleCase{
+		{"a rate of three decimals", func(inv *bill.Invoice) {
+			inv.Lines[0].Taxes = rate(num.MakePercentage(12125, 5))
+			payInFull(inv)
+		}, ""},
+		{"a rate whose further decimals are zeros", func(inv *bill.Invoice) {
+			inv.Lines[0].Taxes = rate(num.MakePercentage(1212500, 7))
+			payInFull(inv)
+		}, ""},
+		{"a rate of four decimals", func(inv *bill.Invoice) {
+			inv.Lines[0].Taxes = rate(num.MakePercentage(121255, 6))
+			payInFull(inv)
+		}, "VAT percentage must have at most 3 decimals"},
+		{"a charge at a rate of four decimals", func(inv *bill.Invoice) {
+			inv.Charges = []*bill.Charge{{Amount: num.MakeAmount(500, 2), Reason: "Rahti", Taxes: rate(num.MakePercentage(121255, 6))}}
+			payInFull(inv)
+		}, "VAT percentage must have at most 3 decimals"},
+	})
+}
+
 func TestLineRules(t *testing.T) {
 	runRuleCases(t, []ruleCase{
 		{"item reference of 70", func(inv *bill.Invoice) { inv.Lines[0].Item.Ref = digits(70) }, ""},
