@@ -1,0 +1,171 @@
+// Package finvoice converts GOBL invoices and credit notes to Finvoice 3.0
+// and back. The fi-finvoice-v3 addon in the addon subpackage holds the
+// validation rules and the e-invoice operator extension the converter reads.
+package finvoice
+
+import (
+	"bytes"
+	"encoding/xml"
+	"errors"
+	"fmt"
+
+	"github.com/invopop/gobl"
+	"github.com/invopop/gobl.fi.finvoice/addon"
+	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/currency"
+)
+
+// Version is the Finvoice version written.
+const Version = "3.0"
+
+var (
+	// ErrUnsupportedDocumentType is returned when the envelope holds anything
+	// other than an invoice, or a Finvoice message that is not one.
+	ErrUnsupportedDocumentType = errors.New("unsupported document type")
+	// ErrSenderOperatorRequired is returned when the receiving party names
+	// its operator but the conversion was given no sender operator to route
+	// from.
+	ErrSenderOperatorRequired = errors.New("sender operator is required to route to the receiver's operator")
+)
+
+// Invoice is the Finvoice message of an invoice or credit note.
+type Invoice struct {
+	XMLName xml.Name `xml:"Finvoice"`
+	Version string   `xml:"Version,attr"`
+
+	Transmission *MessageTransmissionDetails `xml:"MessageTransmissionDetails,omitempty"`
+
+	Seller                       *SellerPartyDetails         `xml:"SellerPartyDetails"`
+	SellerOrganisationUnitNumber string                      `xml:"SellerOrganisationUnitNumber,omitempty"`
+	SellerContactPersonName      string                      `xml:"SellerContactPersonName,omitempty"`
+	SellerCommunication          *SellerCommunicationDetails `xml:"SellerCommunicationDetails,omitempty"`
+	SellerInformation            *SellerInformationDetails   `xml:"SellerInformationDetails,omitempty"`
+
+	Buyer                       *BuyerPartyDetails         `xml:"BuyerPartyDetails"`
+	BuyerOrganisationUnitNumber string                     `xml:"BuyerOrganisationUnitNumber,omitempty"`
+	BuyerContactPersonName      string                     `xml:"BuyerContactPersonName,omitempty"`
+	BuyerCommunication          *BuyerCommunicationDetails `xml:"BuyerCommunicationDetails,omitempty"`
+
+	DeliveryParty   *DeliveryPartyDetails `xml:"DeliveryPartyDetails,omitempty"`
+	DeliveryDetails *DeliveryDetails      `xml:"DeliveryDetails,omitempty"`
+
+	InvoiceDetails *InvoiceDetails `xml:"InvoiceDetails"`
+	Rows           []*InvoiceRow   `xml:"InvoiceRow"`
+	Epi            *EpiDetails     `xml:"EpiDetails"`
+
+	InvoiceURLNames []string `xml:"InvoiceUrlNameText,omitempty"`
+	InvoiceURLs     []string `xml:"InvoiceUrlText,omitempty"`
+}
+
+// converter holds what every part of the document needs from the invoice.
+type converter struct {
+	inv  *bill.Invoice
+	cur  currency.Code
+	opts *options
+	// negate flips every amount: a Finvoice credit note is a zero or negative
+	// document.
+	negate bool
+}
+
+// Convert turns a GOBL envelope into a Finvoice document, an *Invoice for an
+// invoice or credit note. The fi-finvoice-v3 addon is added when the invoice
+// does not declare it, and the invoice must validate under it.
+func Convert(env *gobl.Envelope, opts ...Option) (any, error) {
+	doc, err := ConvertInvoice(env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
+// ConvertInvoice is Convert for callers that already know the envelope holds
+// an invoice.
+func ConvertInvoice(env *gobl.Envelope, opts ...Option) (*Invoice, error) {
+	inv, ok := env.Extract().(*bill.Invoice)
+	if !ok || inv == nil {
+		return nil, ErrUnsupportedDocumentType
+	}
+	if err := ensureAddon(env, inv); err != nil {
+		return nil, err
+	}
+	if err := inv.RemoveIncludedTaxes(); err != nil {
+		return nil, err
+	}
+	// Finvoice amounts have the currency's decimals, and the format has
+	// InvoiceTotalRoundoffAmount for the difference rounding makes.
+	if err := inv.RoundToCurrency(); err != nil {
+		return nil, err
+	}
+
+	o, err := parseOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+	if o.messageID == "" {
+		o.messageID = inv.UUID.String()
+	}
+	c := &converter{
+		inv:    inv,
+		cur:    inv.Currency,
+		opts:   o,
+		negate: inv.Type.In(bill.InvoiceTypeCreditNote),
+	}
+
+	transmission, err := c.newTransmission()
+	if err != nil {
+		return nil, err
+	}
+
+	doc := &Invoice{
+		Version:        Version,
+		Transmission:   transmission,
+		Seller:         c.newSeller(),
+		Buyer:          c.newBuyer(),
+		DeliveryParty:  c.newDeliveryParty(),
+		InvoiceDetails: c.newInvoiceDetails(),
+		Rows:           c.newRows(),
+		Epi:            c.newEpiDetails(),
+	}
+	c.applySellerDetails(doc)
+	c.applyBuyerDetails(doc)
+	c.applyDelivery(doc)
+	for _, u := range c.opts.urls {
+		doc.InvoiceURLNames = append(doc.InvoiceURLNames, u.name)
+		doc.InvoiceURLs = append(doc.InvoiceURLs, u.url)
+	}
+	return doc, nil
+}
+
+// ensureAddon declares the addon on an invoice that lacks it and validates
+// the envelope, so that a document the addon rejects never reaches the
+// mapping.
+func ensureAddon(env *gobl.Envelope, inv *bill.Invoice) error {
+	if !addon.V3.In(inv.GetAddons()...) {
+		inv.SetAddons(append(inv.GetAddons(), addon.V3)...)
+	}
+	// Calculating also prunes null list entries, which validation skips.
+	if err := env.Calculate(); err != nil {
+		return err
+	}
+	return env.Validate()
+}
+
+// Bytes returns the XML of a document returned by Convert.
+func Bytes(doc any) ([]byte, error) {
+	if d, ok := doc.(*Invoice); ok {
+		return d.Bytes()
+	}
+	return nil, fmt.Errorf("%w: %T", ErrUnsupportedDocumentType, doc)
+}
+
+// Bytes renders the message as indented UTF-8 XML.
+func (d *Invoice) Bytes() ([]byte, error) {
+	buf := bytes.NewBufferString(xml.Header)
+	data, err := xml.MarshalIndent(d, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal document: %w", err)
+	}
+	buf.Write(data)
+	buf.WriteString("\n")
+	return buf.Bytes(), nil
+}
