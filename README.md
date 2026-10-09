@@ -250,8 +250,11 @@ result declares `fi-finvoice-v3`:
 - Only invoices are read: `INV01`, `INV02`, `INV06` and `INV07`. Quotations,
   orders, reminders and the other messages of the code list, and copies and
   cancellations of an invoice, are refused with `ErrUnsupportedDocumentType`.
-- The GOBL type comes from `InvoiceTypeCodeUN` when given, else from
-  `InvoiceTypeCode`. Amounts are turned positive only for a credit note
+- The GOBL type comes from `InvoiceTypeCodeUN` when given and mapped, else
+  from `InvoiceTypeCode`; the schema allows any UNTDID 1001 code there, and
+  one with no GOBL type leaves the Finvoice code to decide. A party
+  identifier that repeats the Y-tunnus in the VAT number is folded into it
+  unless it carries another scheme. Amounts are turned positive only for a credit note
   with a negative total, so `INV02` with `380` reads as an invoice with a
   negative total, as an EN 16931 invoice may have.
 - A row made of sub-rows (`SubInvoiceRow`) is a subtotal for display, which
