@@ -243,6 +243,10 @@ result declares `fi-finvoice-v3`:
 - Only invoices are read: `INV01`, `INV02`, `INV06` and `INV07`. Quotations,
   orders, reminders and the other messages of the code list, and copies and
   cancellations of an invoice, are refused with `ErrUnsupportedDocumentType`.
+- The GOBL type comes from `InvoiceTypeCodeUN` when given, else from
+  `InvoiceTypeCode`. Amounts are turned positive only for a credit note
+  with a negative total, so `INV02` with `380` reads as an invoice with a
+  negative total, as an EN 16931 invoice may have.
 - A row made of sub-rows (`SubInvoiceRow`) is a subtotal for display, which
   the guidelines keep out of the totals, so it is left out. So is
   `SpecificationDetails`, the sector-specific itemisation shown with the
