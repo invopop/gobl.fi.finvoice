@@ -117,4 +117,20 @@ func TestParseFrames(t *testing.T) {
 		assert.Equal(t, "Hinta 10 €", inv.Notes[0].Text)
 		assert.Equal(t, cbc.Code("HELSFIHH"), inv.Supplier.Ext.Get(addon.ExtKeyOperator))
 	})
+	t.Run("the root named in markup before it is not the root", func(t *testing.T) {
+		decl := `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
+		doc := strings.TrimPrefix(string(message{}.bytes()), decl)
+		tests := []struct{ name, prefix string }{
+			{"a comment", `<!-- <Finvoice> kept for reference -->` + "\n"},
+			{"a processing instruction", `<?note <Finvoice> follows?>` + "\n"},
+			{"a CDATA section in a frame", `<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><SOAP-ENV:Header><Note><![CDATA[<Finvoice> attached]]></Note></SOAP-ENV:Header><SOAP-ENV:Body/></SOAP-ENV:Envelope>` + "\n"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				env, err := finvoice.Parse([]byte(decl + tt.prefix + doc))
+				require.NoError(t, err)
+				assert.Equal(t, "Lähettäjä Oy", env.Extract().(*bill.Invoice).Supplier.Name)
+			})
+		}
+	})
 }

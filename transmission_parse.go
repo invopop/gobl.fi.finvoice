@@ -36,8 +36,9 @@ const (
 
 var (
 	// finvoiceStart finds the document root, which a transport frame may
-	// precede.
-	finvoiceStart = regexp.MustCompile(`<Finvoice[\s>]`)
+	// precede, and the comments, CDATA and processing instructions that may
+	// name it as text.
+	finvoiceStart = regexp.MustCompile(`(?s)<!--.*?-->|<!\[CDATA\[.*?\]\]>|<\?.*?\?>|<Finvoice[\s>]`)
 	// xmlDeclaration finds the declaration that names a charset.
 	xmlDeclaration = regexp.MustCompile(`<\?xml\s[^>]*\?>`)
 	// ovtAddress is 0037, a Y-tunnus and up to five characters naming a unit.
@@ -64,25 +65,32 @@ type soapParty struct {
 // splitFrame separates a transport frame from the document, giving the
 // document the declaration that names its charset.
 func splitFrame(data []byte) (frame, body []byte) {
-	loc := finvoiceStart.FindIndex(data)
-	if loc == nil {
-		return nil, data
+	start := -1
+	for off := 0; start < 0; {
+		loc := finvoiceStart.FindIndex(data[off:])
+		if loc == nil {
+			return nil, data
+		}
+		if bytes.HasPrefix(data[off+loc[0]:], []byte("<Finvoice")) {
+			start = off + loc[0]
+		}
+		off += loc[1]
 	}
-	decls := xmlDeclaration.FindAllIndex(data[:loc[0]], -1)
+	decls := xmlDeclaration.FindAllIndex(data[:start], -1)
 	if len(decls) == 0 {
-		return data[:loc[0]], data[loc[0]:]
+		return data[:start], data[start:]
 	}
 	last := decls[len(decls)-1]
 	body = append(body, data[last[0]:last[1]]...)
 	body = append(body, '\n')
-	body = append(body, data[loc[0]:]...)
+	body = append(body, data[start:]...)
 	// A file with one declaration, at its very start, is in one charset, so
 	// that declaration serves the frame as well.
 	if len(decls) == 1 && len(bytes.TrimSpace(data[:last[0]])) == 0 {
-		return data[:loc[0]], body
+		return data[:start], body
 	}
 	frame = append(frame, data[:last[0]]...)
-	frame = append(frame, data[last[1]:loc[0]]...)
+	frame = append(frame, data[last[1]:start]...)
 	return frame, body
 }
 

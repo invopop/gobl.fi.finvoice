@@ -237,6 +237,14 @@ func TestParseCreditNoteSign(t *testing.T) {
 			})
 		}
 	})
+	t.Run("an invoice's UNTDID code reads as an invoice with a negative total", func(t *testing.T) {
+		details := `<InvoiceTypeCode>INV02</InvoiceTypeCode><InvoiceTypeCodeUN>380</InvoiceTypeCodeUN><InvoiceTypeText>HYVITYSLASKU</InvoiceTypeText><OriginCode>Original</OriginCode><InvoiceNumber>78</InvoiceNumber>`
+		rows := strings.Replace(strings.Replace(defaultRows, "<InvoicedQuantity>2<", "<InvoicedQuantity>-2<", 1), ">100,00<", ">-100,00<", 1)
+		inv := parseMessage(t, message{details: details, rows: rows, total: "-125,50"})
+		assert.Equal(t, bill.InvoiceTypeStandard, inv.Type)
+		assert.Equal(t, "-2", inv.Lines[0].Quantity.String())
+		assert.Equal(t, "-125.50", inv.Totals.Payable.String())
+	})
 	t.Run("a mismatch is reported with the document's signs", func(t *testing.T) {
 		rows := strings.Replace(strings.Replace(defaultRows, "<InvoicedQuantity>2<", "<InvoicedQuantity>-2<", 1), ">100,00<", ">-100,00<", 1)
 		_, err := finvoice.Parse(message{details: details, rows: rows, total: "-999,00"}.bytes())
