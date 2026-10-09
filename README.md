@@ -109,6 +109,8 @@ Finvoice invoice, credit notes included:
   document, as each Finvoice element holds one identifier.
 - **Currency**: at most two decimals, since the payment order's
   `EpiInstructedAmount` takes exactly two and would otherwise be rounded.
+- **VAT rates**: at most three decimals, the most `RowVatRatePercent` and
+  `VatRatePercent` hold.
 - **Payment details**: required unconditionally, not only when an amount is
   due as in EN 16931 (BR-CO-25).
 - **Credit transfer**: payment instructions must use the `credit-transfer`
