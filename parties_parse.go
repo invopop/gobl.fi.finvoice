@@ -100,7 +100,8 @@ func goblIdentification(taxCode string, id *Identifier, country l10n.ISOCountryC
 		return tid, nil
 	}
 	code := strings.TrimSpace(id.Value)
-	if tid != nil && tid.Country == l10n.FI.Tax() {
+	scheme := strings.TrimSpace(id.SchemeID)
+	if tid != nil && tid.Country == l10n.FI.Tax() && (scheme == "" || scheme == schemeFinnishOrg) {
 		if m := businessID.FindStringSubmatch(code); m != nil && tid.Code.String() == m[1]+m[2] {
 			return tid, nil
 		}
@@ -111,7 +112,7 @@ func goblIdentification(taxCode string, id *Identifier, country l10n.ISOCountryC
 		abroad = tid.Country != l10n.FI.Tax()
 	}
 	identity := &org.Identity{Scope: org.IdentityScopeLegal, Code: cbc.Code(code)}
-	if scheme := strings.TrimSpace(id.SchemeID); scheme != "" {
+	if scheme != "" {
 		identity.Ext = identity.Ext.Set(iso.ExtKeySchemeID, cbc.Code(scheme))
 	} else if !abroad && isBusinessID(code) {
 		identity.Ext = identity.Ext.Set(iso.ExtKeySchemeID, cbc.Code(schemeFinnishOrg))

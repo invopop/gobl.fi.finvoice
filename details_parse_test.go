@@ -27,6 +27,7 @@ func TestParseTypeCodes(t *testing.T) {
 		{"prepayment", "INV01", "386", bill.InvoiceTypeStandard, tax.TagPrepayment},
 		{"factored", "INV01", "393", bill.InvoiceTypeStandard, tax.TagFactoring},
 		{"factored credit note", "INV02", "396", bill.InvoiceTypeCreditNote, tax.TagFactoring},
+		{"an unmapped UNTDID code leaves the Finvoice code to decide", "INV01", "388", bill.InvoiceTypeStandard, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

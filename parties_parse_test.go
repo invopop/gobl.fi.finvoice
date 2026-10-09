@@ -73,6 +73,15 @@ func TestParseIdentities(t *testing.T) {
 			assert.Equal(t, want, got)
 		}
 	})
+	t.Run("a Y-tunnus labelled with another scheme is kept beside the VAT number", func(t *testing.T) {
+		data := strings.Replace(string(message{}.bytes()), "<SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>", `<SellerPartyIdentifier SchemeID="0216">7654321-2</SellerPartyIdentifier>`, 1)
+		env, err := finvoice.Parse([]byte(data))
+		require.NoError(t, err)
+		inv := env.Extract().(*bill.Invoice)
+		require.NotNil(t, inv.Supplier.TaxID)
+		require.Len(t, inv.Supplier.Identities, 1)
+		assert.Equal(t, cbc.Code("0216"), inv.Supplier.Identities[0].Ext.Get(iso.ExtKeySchemeID))
+	})
 	t.Run("Y-tunnus without a VAT number stays a legal identity", func(t *testing.T) {
 		inv := parseMessage(t, message{noVATNumber: true})
 		assert.Nil(t, inv.Supplier.TaxID)
