@@ -151,8 +151,8 @@ func (c *converter) newEpiDetails() *EpiDetails {
 	}
 	if ct.BIC != cbc.CodeEmpty {
 		epi.Party.BFI.Identifier = &Account{Value: ct.BIC.String(), Scheme: schemeBIC}
-		epi.Party.BFI.Name = strings.TrimSpace(cut(ct.Name, bankNameMaxLength))
 	}
+	epi.Party.BFI.Name = strings.TrimSpace(cut(ct.Name, bankNameMaxLength))
 	return epi
 }
 

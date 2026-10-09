@@ -49,8 +49,12 @@ func TestConvertPaymentOrder(t *testing.T) {
 		}, func(t *testing.T, doc *finvoice.Invoice) {
 			assert.Equal(t, "Helsingin Kaupungin Asuntotuotanto", doc.Epi.Party.Beneficiary.NameAddress)
 		}},
-		{"no BIC", func(inv *bill.Invoice) { inv.Payment.Instructions.CreditTransfer[0].BIC = "" }, func(t *testing.T, doc *finvoice.Invoice) {
+		{"no BIC, with a bank name", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
+			inv.Payment.Instructions.CreditTransfer[0].Name = "Myyjä Oy tili"
+		}, func(t *testing.T, doc *finvoice.Invoice) {
 			assert.Nil(t, doc.Epi.Party.BFI.Identifier)
+			assert.Equal(t, "Myyjä Oy tili", doc.Epi.Party.BFI.Name)
 			assert.Nil(t, doc.SellerInformation.Accounts)
 		}},
 		{"payee", func(inv *bill.Invoice) {
