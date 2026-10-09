@@ -4,13 +4,28 @@ import (
 	"strings"
 	"testing"
 
+	finvoice "github.com/invopop/gobl.fi.finvoice"
+	"github.com/invopop/gobl/catalogues/iso"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/org"
+	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestConvertParties pins the party fields the examples leave out, and what
 // becomes of an address Finvoice has no room for.
 func TestConvertParties(t *testing.T) {
+	t.Run("the legal identity: a stated one, else the Y-tunnus in the VAT number", func(t *testing.T) {
+		env, _ := exampleEnvelope(t, "invoice")
+		doc := convertAdjusted(t, env)
+		assert.Equal(t, &finvoice.Identifier{Value: "7654321-2", SchemeID: "0212"}, doc.Seller.Identifier)
+
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Supplier.Identities = []*org.Identity{{Scope: org.IdentityScopeLegal, Code: "4012345000009",
+			Ext: tax.ExtensionsOf(cbc.CodeMap{iso.ExtKeySchemeID: "0088"})}}
+		doc = convertAdjusted(t, env)
+		assert.Equal(t, &finvoice.Identifier{Value: "4012345000009", SchemeID: "0088"}, doc.Seller.Identifier)
+	})
 	t.Run("trading name, region and the organisation's email", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")
 		inv.Supplier.Alias = "Myyjä"

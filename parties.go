@@ -26,6 +26,9 @@ const (
 // businessID is a Finnish Y-tunnus: seven digits, a hyphen and a check digit.
 var businessID = regexp.MustCompile(`^([0-9]{7})-?([0-9])$`)
 
+// schemeFinnishOrg is the ISO 6523 scheme of a Y-tunnus.
+const schemeFinnishOrg = "0212"
+
 // SellerPartyDetails identifies the seller.
 type SellerPartyDetails struct {
 	Identifier  *Identifier                 `xml:"SellerPartyIdentifier,omitempty"`
@@ -170,21 +173,21 @@ func (c *converter) applyBuyerDetails(doc *Invoice) {
 	}
 }
 
-// newPartyIdentifier writes the party's legal registration: the Y-tunnus
-// for a Finnish party, else its first legal-scope identity with the ISO 6523
-// scheme the EN 16931 addon records on it.
+// newPartyIdentifier writes the party's legal registration: its first
+// legal-scope identity with the ISO 6523 scheme the EN 16931 addon records on
+// it, else, for a Finnish party, the Y-tunnus its VAT number is built from.
 func newPartyIdentifier(p *org.Party) *Identifier {
-	if p.TaxID != nil && p.TaxID.Country == l10n.FI.Tax() {
-		if m := businessID.FindStringSubmatch(p.TaxID.Code.String()); m != nil {
-			return &Identifier{Value: m[1] + "-" + m[2]}
-		}
-	}
 	for _, id := range p.Identities {
 		if id != nil && id.Scope == org.IdentityScopeLegal {
 			return &Identifier{
 				Value:    id.Code.String(),
 				SchemeID: id.Ext.Get(iso.ExtKeySchemeID).String(),
 			}
+		}
+	}
+	if p.TaxID != nil && p.TaxID.Country == l10n.FI.Tax() {
+		if m := businessID.FindStringSubmatch(p.TaxID.Code.String()); m != nil {
+			return &Identifier{Value: m[1] + "-" + m[2], SchemeID: schemeFinnishOrg}
 		}
 	}
 	return nil

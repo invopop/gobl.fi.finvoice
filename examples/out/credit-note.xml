@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Finvoice Version="3.0">
   <SellerPartyDetails>
-    <SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
+    <SellerPartyIdentifier SchemeID="0212">7654321-2</SellerPartyIdentifier>
     <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
     <SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
     <SellerPostalAddressDetails>
@@ -19,7 +19,7 @@
     </SellerAccountDetails>
   </SellerInformationDetails>
   <BuyerPartyDetails>
-    <BuyerPartyIdentifier>4567890-7</BuyerPartyIdentifier>
+    <BuyerPartyIdentifier SchemeID="0212">4567890-7</BuyerPartyIdentifier>
     <BuyerOrganisationName>Ostaja Oy</BuyerOrganisationName>
     <BuyerOrganisationTaxCode>FI45678907</BuyerOrganisationTaxCode>
     <BuyerPostalAddressDetails>

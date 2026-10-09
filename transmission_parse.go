@@ -29,7 +29,6 @@ const (
 // ISO 6523 schemes guessed for an e-invoice address given without one; an
 // address of no known shape is kept as an inbox under inboxLabel.
 const (
-	schemeFinnishOrg  = "0212"
 	schemeIBANAddress = "9918"
 	inboxLabel        = "Finvoice"
 )

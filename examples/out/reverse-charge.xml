@@ -16,7 +16,7 @@
     </MessageDetails>
   </MessageTransmissionDetails>
   <SellerPartyDetails>
-    <SellerPartyIdentifier>7654321-2</SellerPartyIdentifier>
+    <SellerPartyIdentifier SchemeID="0212">7654321-2</SellerPartyIdentifier>
     <SellerOrganisationName>Myyjä Oy</SellerOrganisationName>
     <SellerOrganisationTaxCode>FI76543212</SellerOrganisationTaxCode>
     <SellerPostalAddressDetails>
