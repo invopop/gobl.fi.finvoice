@@ -130,6 +130,8 @@ Finvoice invoice, credit notes included:
   may only point at generic material (§15.1).
 - **Delivery period**: both dates are required, as `DeliveryPeriodDetails`
   takes both.
+- **Delivery receiver**: needs a name and an address with a town and post
+  code, which `DeliveryPartyDetails` requires.
 - **BIC** (`EpiBfiIdentifier`, `SellerBic`): recommended on the payment
   order's account but not required, matching the schema and current SEPA
   practice; required on any further account, which Finvoice lists with its
