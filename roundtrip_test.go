@@ -67,9 +67,6 @@ func TestRoundTripCases(t *testing.T) {
 		name, example string
 		adjust        func(inv *bill.Invoice)
 	}{
-		{"further preceding documents", "credit-note", func(inv *bill.Invoice) {
-			inv.Preceding = append(inv.Preceding, &org.DocumentRef{Code: "1000", IssueDate: cal.NewDate(2026, 8, 1)})
-		}},
 		{"every ordering reference", "invoice", func(inv *bill.Invoice) {
 			inv.Ordering.Sales = []*org.DocumentRef{{Code: "SO-1"}}
 			inv.Ordering.Contracts = []*org.DocumentRef{{Code: "SOP-9"}}
@@ -169,6 +166,7 @@ func TestRoundTripFinePercentages(t *testing.T) {
 // does: series and code become one number, a street number part of the
 // street, an advance loses its description, notes their key, a VAT rate
 // becomes its percentage and a charge or discount its UNTDID code. The
+// preceding document is written without its date. The
 // sender's operator is the caller's to give, not the document's to keep.
 // Each side keeps its own rounding rule, so the totals are compared on their
 // own.
@@ -180,6 +178,7 @@ func normalizeRoundTrip(t *testing.T, inv *bill.Invoice) {
 	for _, ref := range inv.Preceding {
 		ref.Code = ref.Series.Join(ref.Code)
 		ref.Series = ""
+		ref.IssueDate = nil
 	}
 	for _, p := range []*org.Party{inv.Supplier, inv.Customer} {
 		for _, a := range p.Addresses {

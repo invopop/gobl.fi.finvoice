@@ -38,7 +38,6 @@
     <InvoiceNumber>2026-1002</InvoiceNumber>
     <InvoiceDate Format="CCYYMMDD">20260910</InvoiceDate>
     <OriginalInvoiceNumber>2026-1001</OriginalInvoiceNumber>
-    <OriginalInvoiceDate Format="CCYYMMDD">20260901</OriginalInvoiceDate>
     <RowsTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">-50,00</RowsTotalVatExcludedAmount>
     <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">-50,00</InvoiceTotalVatExcludedAmount>
     <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">-6,75</InvoiceTotalVatAmount>

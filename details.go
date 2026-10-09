@@ -166,21 +166,14 @@ func finvoiceType(inv *bill.Invoice) (code, text string) {
 	}
 }
 
+// applyPreceding writes the preceding document's number alone, as some
+// Finvoice 3.0 intakes refuse the optional OriginalInvoiceDate.
 func (c *converter) applyPreceding(d *InvoiceDetails) {
-	for i, ref := range c.inv.Preceding {
-		if ref == nil {
-			continue
+	for _, ref := range c.inv.Preceding {
+		if ref != nil {
+			d.OriginalInvoiceNumber = ref.Series.Join(ref.Code).String()
+			return
 		}
-		number := ref.Series.Join(ref.Code).String()
-		if i == 0 {
-			d.OriginalInvoiceNumber = number
-			d.OriginalInvoiceDate = newDatePtr(ref.IssueDate)
-			continue
-		}
-		d.OriginalInvoiceReference = append(d.OriginalInvoiceReference, &OriginalInvoiceReference{
-			InvoiceNumber: number,
-			InvoiceDate:   newDatePtr(ref.IssueDate),
-		})
 	}
 }
 

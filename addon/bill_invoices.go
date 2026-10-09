@@ -128,6 +128,9 @@ func billInvoiceRules() *rules.Set {
 					is.Func("document number fits", precedingNumberFits),
 				),
 			),
+			rules.Assert("43", "at most one preceding document is allowed (Finvoice OriginalInvoiceNumber)",
+				is.Func("one preceding document", precedingSingle),
+			),
 		),
 		rules.Field("ordering",
 			rules.Assert("26", fmt.Sprintf("ordering references must be at most %d characters (Finvoice BuyerReferenceIdentifier, SellerReferenceIdentifier, OrderIdentifier, AgreementIdentifier, ProjectReferenceIdentifier, TenderReference)", referenceMaxLength),
@@ -292,6 +295,13 @@ func orderingReferencesFit(val any) bool {
 		}
 	}
 	return true
+}
+
+// precedingSingle checks the invoice cites one preceding document at most,
+// the one OriginalInvoiceNumber holds.
+func precedingSingle(val any) bool {
+	refs, ok := val.([]*org.DocumentRef)
+	return !ok || len(refs) <= 1
 }
 
 // orderingReferencesSingle checks each list holds one document, as each
