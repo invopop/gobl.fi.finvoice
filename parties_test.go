@@ -75,6 +75,13 @@ func TestConvertParties(t *testing.T) {
 			assert.Nil(t, doc.Buyer.Address, field)
 		}
 	})
+	t.Run("address with a one-character street falls back to the town", func(t *testing.T) {
+		env, inv := exampleEnvelope(t, "invoice")
+		inv.Customer.Addresses[0].Street = "X"
+		inv.Customer.Addresses[0].StreetExtra = "Y"
+		doc := convertAdjusted(t, env)
+		assert.Equal(t, []string{"Espoo"}, doc.Buyer.Address.StreetName)
+	})
 	t.Run("address without a street", func(t *testing.T) {
 		env, inv := exampleEnvelope(t, "invoice")
 		inv.Customer.Addresses[0].Street = ""

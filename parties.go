@@ -218,10 +218,12 @@ func newPostalAddress(p *org.Party) *postalAddress {
 		countryCode:   a.Country.String(),
 		postOfficeBox: cut(a.PostOfficeBox, addressMaxLength),
 	}
-	street := strings.TrimSpace(a.Street + " " + a.Number)
-	out.streetName = split(street, addressMaxLength, streetLines)
-	if extra := split(a.StreetExtra, addressMaxLength, streetLines-len(out.streetName)); len(extra) > 0 {
-		out.streetName = append(out.streetName, extra...)
+	// Street lines take at least two characters; shorter ones are ignored.
+	for _, street := range []string{a.Street + " " + a.Number, a.StreetExtra} {
+		if tooShort(street) {
+			continue
+		}
+		out.streetName = append(out.streetName, split(street, addressMaxLength, streetLines-len(out.streetName))...)
 	}
 	if len(out.streetName) == 0 {
 		// A street line of at least two characters is required; the PO box or
