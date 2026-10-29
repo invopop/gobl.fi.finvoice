@@ -49,13 +49,20 @@ func TestConvertPaymentOrder(t *testing.T) {
 		}, func(t *testing.T, doc *finvoice.Invoice) {
 			assert.Equal(t, "Helsingin Kaupungin Asuntotuotanto", doc.Epi.Party.Beneficiary.NameAddress)
 		}},
-		{"no BIC, with a bank name", func(inv *bill.Invoice) {
+		{"no BIC: read off the Finnish IBAN", func(inv *bill.Invoice) {
 			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
 			inv.Payment.Instructions.CreditTransfer[0].Name = "Myyjä Oy tili"
 		}, func(t *testing.T, doc *finvoice.Invoice) {
-			assert.Nil(t, doc.Epi.Party.BFI.Identifier)
+			require.NotNil(t, doc.Epi.Party.BFI.Identifier)
+			assert.Equal(t, finvoice.Account{Value: "NDEAFIHH", Scheme: "BIC"}, *doc.Epi.Party.BFI.Identifier)
 			assert.Equal(t, "Myyjä Oy tili", doc.Epi.Party.BFI.Name)
-			assert.Nil(t, doc.SellerInformation.Accounts)
+			require.Len(t, doc.SellerInformation.Accounts, 1)
+			assert.Equal(t, "NDEAFIHH", doc.SellerInformation.Accounts[0].BIC.Value)
+		}},
+		{"a given BIC wins over the IBAN's", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].BIC = "OKOYFIHH"
+		}, func(t *testing.T, doc *finvoice.Invoice) {
+			assert.Equal(t, "OKOYFIHH", doc.Epi.Party.BFI.Identifier.Value)
 		}},
 		{"payee", func(inv *bill.Invoice) {
 			inv.Payment.Payee = &org.Party{Name: "Perintä Oy"}

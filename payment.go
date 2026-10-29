@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/invopop/gobl.fi.finvoice/addon"
 	"github.com/invopop/gobl/catalogues/untdid"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
@@ -149,11 +150,20 @@ func (c *converter) newEpiDetails() *EpiDetails {
 			PaymentMeansText: cut(instr.Detail, paymentMeansTextMaxLength),
 		},
 	}
-	if ct.BIC != cbc.CodeEmpty {
-		epi.Party.BFI.Identifier = &Account{Value: ct.BIC.String(), Scheme: schemeBIC}
+	if bic := accountBIC(ct); bic != cbc.CodeEmpty {
+		epi.Party.BFI.Identifier = &Account{Value: bic.String(), Scheme: schemeBIC}
 	}
 	epi.Party.BFI.Name = strings.TrimSpace(cut(ct.Name, bankNameMaxLength))
 	return epi
+}
+
+// accountBIC is the account's bank: the BIC given, or the one a Finnish
+// IBAN's monetary institution code stands for.
+func accountBIC(ct *pay.CreditTransfer) cbc.Code {
+	if ct.BIC != cbc.CodeEmpty {
+		return ct.BIC
+	}
+	return addon.FinnishBIC(ct.IBAN)
 }
 
 // instructedAmount is what remains to be paid: the amount due, or the
@@ -167,20 +177,22 @@ func (c *converter) instructedAmount() num.Amount {
 }
 
 // newSellerAccounts lists the accounts a transfer may be paid to, leaving
-// out one without a BIC, which only the payment order's account may lack.
+// out one whose bank can't be named, which only the payment order's account
+// may lack.
 func (c *converter) newSellerAccounts() []*SellerAccountDetails {
 	var out []*SellerAccountDetails
 	for _, ct := range c.inv.Payment.Instructions.CreditTransfer {
-		if ct == nil || ct.BIC == cbc.CodeEmpty {
+		if ct == nil {
 			continue
 		}
+		bic := accountBIC(ct)
 		id := newAccountID(ct)
-		if id == nil {
+		if bic == cbc.CodeEmpty || id == nil {
 			continue
 		}
 		out = append(out, &SellerAccountDetails{
 			AccountID: *id,
-			BIC:       Account{Value: ct.BIC.String(), Scheme: schemeBIC},
+			BIC:       Account{Value: bic.String(), Scheme: schemeBIC},
 			Name:      cut(ct.Name, accountNameMaxLength),
 		})
 	}

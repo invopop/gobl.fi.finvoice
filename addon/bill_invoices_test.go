@@ -609,6 +609,18 @@ func TestPaymentInstructionRules(t *testing.T) {
 			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
 				&pay.CreditTransfer{IBAN: "FI4250001510000023"})
 		}, "credit transfers after the first need a BIC"},
+		{"first account on a foreign IBAN with a BIC", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].IBAN = "DE89370400440532013000"
+			inv.Payment.Instructions.CreditTransfer[0].BIC = "COBADEFFXXX"
+		}, ""},
+		{"first account on a foreign IBAN without a BIC", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].IBAN = "DE89370400440532013000"
+			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
+		}, "first credit transfer needs a BIC"},
+		{"first account on a Finnish IBAN with an unlisted bank code, without a BIC", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].IBAN = "FI0031001234567890"
+			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
+		}, "first credit transfer needs a BIC"},
 		{"currency with three decimals", func(inv *bill.Invoice) {
 			inv.Currency = "BHD"
 			inv.ExchangeRates = []*currency.ExchangeRate{{From: "BHD", To: "EUR", Amount: num.MakeAmount(24, 1)}}

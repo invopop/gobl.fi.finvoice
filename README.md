@@ -133,10 +133,12 @@ Finvoice invoice, credit notes included:
   takes both.
 - **Delivery receiver**: needs a name and an address with a town and post
   code, which `DeliveryPartyDetails` requires.
-- **BIC** (`EpiBfiIdentifier`, `SellerBic`): recommended on the payment
-  order's account but not required, matching the schema and current SEPA
-  practice; required on any further account, which Finvoice lists with its
-  BIC. A further account may be a BBAN.
+- **BIC** (`EpiBfiIdentifier`, `SellerBic`): written for every account.
+  When the payment order's account gives none, the converter reads it off
+  a Finnish IBAN's monetary institution code, following Finance Finland's
+  list (`addon.FinnishBIC`); an account whose bank can't be named that
+  way needs the BIC, since Apix's Finvoice 3.0 intake refuses an empty
+  bank block. Any further account needs its BIC given, and may be a BBAN.
 
 IBANs and payment references are normalized to their machine form: grouping
 spaces are removed and IBANs are upper-cased.

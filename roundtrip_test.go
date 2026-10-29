@@ -175,6 +175,15 @@ func normalizeRoundTrip(t *testing.T, inv *bill.Invoice) {
 	inv.UUID = uuid.MustParse(testUUID)
 	inv.Code = inv.Series.Join(inv.Code)
 	inv.Series = ""
+	// The document names the bank even when the invoice didn't, read off
+	// the Finnish IBAN, so the parsed invoice carries it.
+	if instr := inv.Payment.Instructions; instr != nil {
+		for _, ct := range instr.CreditTransfer {
+			if ct.BIC == "" {
+				ct.BIC = addon.FinnishBIC(ct.IBAN)
+			}
+		}
+	}
 	for _, ref := range inv.Preceding {
 		ref.Code = ref.Series.Join(ref.Code)
 		ref.Series = ""

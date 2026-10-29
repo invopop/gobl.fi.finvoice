@@ -27,6 +27,12 @@
     </SellerPostalAddressDetails>
   </SellerPartyDetails>
   <SellerOrganisationUnitNumber>003776543212</SellerOrganisationUnitNumber>
+  <SellerInformationDetails>
+    <SellerAccountDetails>
+      <SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID>
+      <SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic>
+    </SellerAccountDetails>
+  </SellerInformationDetails>
   <BuyerPartyDetails>
     <BuyerPartyIdentifier>HRB 12345</BuyerPartyIdentifier>
     <BuyerOrganisationName>Beispiel GmbH</BuyerOrganisationName>
@@ -115,7 +121,9 @@
       <EpiReference>1232</EpiReference>
     </EpiIdentificationDetails>
     <EpiPartyDetails>
-      <EpiBfiPartyDetails></EpiBfiPartyDetails>
+      <EpiBfiPartyDetails>
+        <EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier>
+      </EpiBfiPartyDetails>
       <EpiBeneficiaryPartyDetails>
         <EpiNameAddressDetails>Myyjä Oy</EpiNameAddressDetails>
         <EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>
