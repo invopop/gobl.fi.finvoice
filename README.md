@@ -133,10 +133,11 @@ Finvoice invoice, credit notes included:
   takes both.
 - **Delivery receiver**: needs a name and an address with a town and post
   code, which `DeliveryPartyDetails` requires.
-- **BIC** (`EpiBfiIdentifier`, `SellerBic`): recommended on the payment
-  order's account but not required, matching the schema and current SEPA
-  practice; required on any further account, which Finvoice lists with its
-  BIC. A further account may be a BBAN.
+- **Bank** (`EpiBfiIdentifier`, `EpiBfiName`): the payment order's account
+  must name its bank, with a `bic` or a bank `name`. The schema allows an
+  empty bank block, but Apix's Finvoice 3.0 intake refuses a message whose
+  bank block is empty. Any further account needs its BIC (`SellerBic`),
+  and may be a BBAN.
 
 IBANs and payment references are normalized to their machine form: grouping
 spaces are removed and IBANs are upper-cased.

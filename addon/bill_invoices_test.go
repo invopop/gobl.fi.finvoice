@@ -70,6 +70,7 @@ func testInvoiceStandard(t *testing.T) *bill.Invoice {
 				CreditTransfer: []*pay.CreditTransfer{
 					{
 						IBAN: "FI2112345600000785",
+						Name: "Nordea",
 					},
 				},
 			},
@@ -108,9 +109,9 @@ func TestBillInvoiceRules(t *testing.T) {
 		assert.NoError(t, rules.Validate(inv))
 	})
 
-	t.Run("valid invoice without BIC", func(t *testing.T) {
-		// Finvoice recommends the BIC alongside the IBAN but the schema does
-		// not require it, so its absence must not fail validation.
+	t.Run("valid invoice with a bank name instead of a BIC", func(t *testing.T) {
+		// The schema doesn't require the BIC; Apix's 3.0 intake only needs the
+		// bank block filled, and the bank's name does that.
 		inv := testInvoiceStandard(t)
 		require.NoError(t, inv.Calculate())
 		require.Empty(t, inv.Payment.Instructions.CreditTransfer[0].BIC)
@@ -609,6 +610,18 @@ func TestPaymentInstructionRules(t *testing.T) {
 			inv.Payment.Instructions.CreditTransfer = append(inv.Payment.Instructions.CreditTransfer,
 				&pay.CreditTransfer{IBAN: "FI4250001510000023"})
 		}, "credit transfers after the first need a BIC"},
+		{"first account with a BIC and no bank name", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].BIC = "NDEAFIHH"
+			inv.Payment.Instructions.CreditTransfer[0].Name = ""
+		}, ""},
+		{"first account with a bank name and no BIC", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
+			inv.Payment.Instructions.CreditTransfer[0].Name = "Nordea"
+		}, ""},
+		{"first account with neither a BIC nor a bank name", func(inv *bill.Invoice) {
+			inv.Payment.Instructions.CreditTransfer[0].BIC = ""
+			inv.Payment.Instructions.CreditTransfer[0].Name = " "
+		}, "first credit transfer needs a BIC or a bank name"},
 		{"currency with three decimals", func(inv *bill.Invoice) {
 			inv.Currency = "BHD"
 			inv.ExchangeRates = []*currency.ExchangeRate{{From: "BHD", To: "EUR", Amount: num.MakeAmount(24, 1)}}

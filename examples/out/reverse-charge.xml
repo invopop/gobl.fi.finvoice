@@ -115,7 +115,9 @@
       <EpiReference>1232</EpiReference>
     </EpiIdentificationDetails>
     <EpiPartyDetails>
-      <EpiBfiPartyDetails></EpiBfiPartyDetails>
+      <EpiBfiPartyDetails>
+        <EpiBfiName>Nordea</EpiBfiName>
+      </EpiBfiPartyDetails>
       <EpiBeneficiaryPartyDetails>
         <EpiNameAddressDetails>Myyjä Oy</EpiNameAddressDetails>
         <EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID>

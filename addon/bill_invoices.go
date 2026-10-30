@@ -43,9 +43,10 @@ const (
 // including credit notes, so the payment rules below apply unconditionally
 // rather than only when an amount is due (en16931 BR-CO-25).
 //
-// EpiBfiIdentifier (the BIC) is optional in the Finvoice schema and SEPA
-// practice no longer requires it for domestic transfers, so the addon
-// recommends but does not require it.
+// The payment order's bank block (EpiBfiPartyDetails) may be empty under the
+// Finvoice schema, but Apix's Finvoice 3.0 intake refuses a message whose
+// bank block is, so the first account must name its bank: a BIC
+// (EpiBfiIdentifier) or a bank name (EpiBfiName).
 func billInvoiceRules() *rules.Set {
 	return rules.For(new(bill.Invoice),
 		rules.Field("supplier",
@@ -213,6 +214,9 @@ func billInvoiceRules() *rules.Set {
 					),
 					rules.Assert("35", "credit transfers after the first need a BIC (Finvoice SellerBic)",
 						is.Func("later entries have a BIC", laterCreditTransfersHaveBIC),
+					),
+					rules.Assert("44", "first credit transfer needs a BIC or a bank name (Finvoice EpiBfiIdentifier or EpiBfiName)",
+						is.Func("first entry names its bank", firstCreditTransferNamesBank),
 					),
 					rules.Each(
 						rules.Field("iban",
@@ -467,6 +471,16 @@ func firstCreditTransferHasIBAN(val any) bool {
 		return true
 	}
 	return cts[0] != nil && cts[0].IBAN != cbc.CodeEmpty
+}
+
+// firstCreditTransferNamesBank checks the payment order's account names its
+// bank, by BIC or by name.
+func firstCreditTransferNamesBank(val any) bool {
+	cts, ok := val.([]*pay.CreditTransfer)
+	if !ok || len(cts) == 0 || cts[0] == nil {
+		return true
+	}
+	return cts[0].BIC != cbc.CodeEmpty || strings.TrimSpace(cts[0].Name) != ""
 }
 
 // laterCreditTransfersHaveBIC checks the accounts listed beside the payment

@@ -88,6 +88,7 @@ payment:
     ref: "1232"
     credit_transfer:
       - iban: "FI2112345600000785"
+        name: "Nordea"
   advances:
     - amount: "100.00"
       description: "Ennakko"

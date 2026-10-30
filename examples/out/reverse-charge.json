@@ -4,7 +4,7 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "45a8b1b6563edc9b018bb97618bd025bc07b7036870fcedd44e3207e9f365d9a"
+			"val": "5778c51badf2f95b65803d6da8a2536263a0d621e68d31b6e7f3059f6deb6140"
 		},
 		"from": "iso6523-actorid-upis::0216:003776543212",
 		"to": "iso6523-actorid-upis::9930:DE111111125"
@@ -183,7 +183,8 @@
 				"ref": "1232",
 				"credit_transfer": [
 					{
-						"iban": "FI2112345600000785"
+						"iban": "FI2112345600000785",
+						"name": "Nordea"
 					}
 				],
 				"ext": {

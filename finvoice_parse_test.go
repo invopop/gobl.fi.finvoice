@@ -174,7 +174,7 @@ func (d message) bytes() []byte {
 ` + strings.ReplaceAll(def(d.rows, defaultRows), `AmountCurrencyIdentifier="EUR"`, `AmountCurrencyIdentifier="`+def(d.currency, "EUR")+`"`) + `
 <EpiDetails>
 <EpiIdentificationDetails><EpiDate Format="CCYYMMDD">20260922</EpiDate><EpiReference>1042005</EpiReference></EpiIdentificationDetails>
-<EpiPartyDetails><EpiBfiPartyDetails/><EpiBeneficiaryPartyDetails><EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID></EpiBeneficiaryPartyDetails></EpiPartyDetails>
+<EpiPartyDetails><EpiBfiPartyDetails><EpiBfiName>Nordea</EpiBfiName></EpiBfiPartyDetails><EpiBeneficiaryPartyDetails><EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID></EpiBeneficiaryPartyDetails></EpiPartyDetails>
 ` + def(d.epi, `<EpiPaymentInstructionDetails><EpiInstructedAmount AmountCurrencyIdentifier="`+def(d.currency, "EUR")+`">`+def(d.total, "125,50")+`</EpiInstructedAmount><EpiCharge ChargeOption="SHA">SHA</EpiCharge><EpiDateOptionDate Format="CCYYMMDD">20261006</EpiDateOptionDate></EpiPaymentInstructionDetails>`) + `
 </EpiDetails>
 </Finvoice>`)
