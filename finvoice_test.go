@@ -16,8 +16,8 @@ import (
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/pkg/examples"
 	"github.com/invopop/gobl/tax"
-	"github.com/lestrrat-go/libxml2"
-	"github.com/lestrrat-go/libxml2/xsd"
+	"github.com/lestrrat-go/helium"
+	"github.com/lestrrat-go/helium/xsd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,18 +77,27 @@ func exampleEnvelope(t *testing.T, name string) (*gobl.Envelope, *bill.Invoice) 
 
 func loadSchema(t *testing.T) *xsd.Schema {
 	t.Helper()
-	schema, err := xsd.ParseFromFile(filepath.Join("schemas", "Finvoice3.0.xsd"))
-	require.NoError(t, err)
+	ctx := t.Context()
+	collector := helium.NewErrorCollector(ctx, helium.ErrorLevelNone)
+	schema, err := xsd.NewCompiler().
+		ErrorHandler(collector).
+		CompileFile(ctx, filepath.Join("schemas", "Finvoice3.0.xsd"))
+	require.NoError(t, err, "%v", collector.Errors())
 	return schema
 }
 
 func assertValidXML(t *testing.T, schema *xsd.Schema, data []byte) {
 	t.Helper()
-	doc, err := libxml2.Parse(data)
+	ctx := t.Context()
+	doc, err := helium.NewParser().Parse(ctx, data)
 	require.NoError(t, err)
-	defer doc.Free()
-	if err := schema.Validate(doc); err != nil {
-		for _, e := range err.(xsd.SchemaValidationError).Errors() {
+	collector := helium.NewErrorCollector(ctx, helium.ErrorLevelNone)
+	if err := xsd.NewValidator(schema).ErrorHandler(collector).Validate(ctx, doc); err != nil {
+		errs := collector.Errors()
+		if len(errs) == 0 {
+			errs = []error{err}
+		}
+		for _, e := range errs {
 			t.Error(e)
 		}
 	}
@@ -111,7 +120,6 @@ func validXML(t *testing.T, doc *finvoice.Invoice) []byte {
 	data, err := doc.Bytes()
 	require.NoError(t, err)
 	schema := loadSchema(t)
-	defer schema.Free()
 	assertValidXML(t, schema, data)
 	return data
 }
@@ -120,7 +128,6 @@ func validXML(t *testing.T, doc *finvoice.Invoice) []byte {
 // 3.0 schema. Run with -update to regenerate the goldens.
 func TestConvert(t *testing.T) {
 	schema := loadSchema(t)
-	defer schema.Free()
 
 	for _, tc := range convertCases(t) {
 		t.Run(tc.name, func(t *testing.T) {
